@@ -1,19 +1,18 @@
 # maDMP export validation report — project 4 "Measurement_02"
 
-*Run:* 2026-11-18T15:09:51.349482+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
+*Run:* 2026-11-18T17:31:49.182150+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
 
 Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement_02.render.json` (plugin render), this report.
 
 ## Summary
 
 - mapping-spec rows: 62
-- `NOT-ANSWERED`: 31
-- `OK`: 17
+- `NOT-ANSWERED`: 30
+- `OK`: 18
 - `PATH-MISSING-IN-CATALOG`: 13
 - `RESOLVED-EMPTY`: 1
-- answered-but-not-exported values: 27
-- structural checks: 19/20 passed
-- UI export `Measurement_02-dmp.json` vs. offline render: IDENTICAL
+- answered-but-not-exported values: 28
+- structural checks: 20/20 passed
 
 ## Traceability matrix (mapping spec -> RDMO -> maDMP)
 
@@ -74,7 +73,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `dataset/fields/dataset_id/type` | `project/dataset/dataset_identifier` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
 | `dataset/fields/dataset_id/fallback_identifier` | `project/dataset/id` | True | True | `bnetza_vorhabenpunkte_bbplg_2` | True | **OK** |
 | `dataset/fields/distribution/during/access_url` | `project/dataset/storage/uri` | True | False | `None` | False | **NOT-ANSWERED** |
-| `dataset/fields/distribution/during/data_access` | `project/dataset/sharing/yesno` | True | False | `None` | False | **NOT-ANSWERED** |
+| `dataset/fields/distribution/during/data_access` | `project/dataset/sharing/yesno` | True | True | `open` | True | **OK** |
 | `dataset/fields/distribution/during/format` | `project/dataset/format` | True | True | `CSV and JSON` | True | **OK** |
 | `dataset/fields/distribution/after/certified_with` | `project/dataset/preservation/certification` | True | True | `None` | False | **RESOLVED-EMPTY** |
 | `dataset/fields/distribution/after/pid_system` | `project/dataset/pids/system` | True | False | `None` | False | **NOT-ANSWERED** |
@@ -100,6 +99,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `project/dataset/reproducibility` | 0 | Fully reproducible via official BNetzA sources[cite: 2] and OEMETADATA specifica | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
 | `project/dataset/reuse_scenario` | 0 | Data are open to be reused under GeoNutzV[cite: 2]. No PII are published. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/reuse_scenario_usage` | 0 | Research and analysis on power grid expansion projects in Germany. | no mapping spec (not part of the maDMP export) |
+| `project/dataset/sharing/yesno` | 0 | Yes, externally for everyone | MAPPED-BUT-MISSING-IN-OUTPUT | option uri_path not in option map |
 | `project/dataset/size/volume` | 0 | 2 MBits | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
 | `project/dataset/storage/type` | 0 | GitLab. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/usage_description` | 0 | BBPlG power line project point dataset and metadata schema (variant 2) for trump | no mapping spec (not part of the maDMP export) |
@@ -135,8 +135,8 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | dmp/dataset[0].dataset_id.type present | ✅ | other |
 | dmp/dataset[0].distribution is a list | ✅ |  |
 | dmp/dataset[0].distribution[0] has title (str) | ✅ |  |
-| dmp/dataset[0].distribution[0].data_access in open|shared|closed|external | ❌ | None |
+| dmp/dataset[0].distribution[0].data_access in open|shared|closed|external | ✅ | open |
 | dmp/dataset[0].distribution[1] has title (str) | ✅ |  |
-| dmp/dataset[0].distribution[1].data_access in open|shared|closed|external | ✅ | closed |
+| dmp/dataset[0].distribution[1].data_access in open|shared|closed|external | ✅ | open |
 
 Note: the plugin emits the full RDA maDMP shape (contributor, cost, project, …); `madmp-lightmodel.yaml` is the EDO target subset, so unknown top-level keys are expected and not flagged here.

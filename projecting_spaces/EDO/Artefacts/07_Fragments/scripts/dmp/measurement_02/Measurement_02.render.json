@@ -28,13 +28,14 @@
         "distribution": [
           {
             "title": "Storage during the project",
+            "data_access": "open",
             "format": [
               "CSV and JSON"
             ]
           },
           {
             "title": "Preservation after the project",
-            "data_access": "closed"
+            "data_access": "open"
           }
         ],
         "keyword": [

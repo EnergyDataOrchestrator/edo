@@ -1,7 +1,7 @@
 {
   "project_id": 4,
   "project_title": "Measurement_02",
-  "dumped": "2026-11-18T15:09:51.349482+00:00",
+  "dumped": "2026-11-18T17:31:49.182150+00:00",
   "answers": [
     {
       "attribute": "project/coordination/name",
@@ -299,6 +299,15 @@
       "text": "0",
       "value": "No",
       "option": null
+    },
+    {
+      "attribute": "project/dataset/sharing/yesno",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 0,
+      "text": "Yes, externally for everyone",
+      "value": "Yes, externally for everyone",
+      "option": "dataset_sharing_options/69"
     },
     {
       "attribute": "project/dataset/size/volume",
