@@ -32,7 +32,7 @@ Ein Data Management Plan (DMP) wird unter Verwendung von RDMO (Research Data Man
 ## Notizen
 
 ### Transformation Workflow Explanation
-We outline the workflow and mechanics of transforming unformatted or semi-structured measurement metrics (Measurement_02.json) into a machine-actionable Data Management Plan (maDMP) conforming to a target LinkML schema structure, utilizing a declarative LinkML Map specification (madmp-mapping.transform.yaml) and an orchestrating Python runner script (answers_to_dmp.py).
+We outline the workflow and mechanics of transforming unformatted or semi-structured measurement metrics (Measurement_02.json) into a machine-actionable Data Management Plan (maDMP) conforming to a target LinkML schema structure, utilising a declarative LinkML Map specification (madmp-mapping.transform.yaml) and an orchestrating Python runner script (answers_to_dmp.py).
 
 #### Architecture Overview
 The data translation process bridges flat, questionnaire-style metric dumps with highly-nested, standardised metadata models.
