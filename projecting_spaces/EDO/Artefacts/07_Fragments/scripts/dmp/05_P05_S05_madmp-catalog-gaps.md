@@ -29,6 +29,7 @@ Gap classes:
 | 11 | `dataset/fields/dataset_id/type` (primary) | `project/dataset/dataset_identifier` | CATALOG-ABSENT | — | keep fallback type `other` | ACCEPTED (fallback) |
 | 12 | `distribution/after/certified_with` | `project/dataset/preservation/certification` | CATALOG-INSUFFICIENT | catalog offers yes/no only; maDMP wants a certificate type (DIN 31644, CoreTrustSeal, DSA, ISO 16363, …). Answer `0` (no) → empty = correct; answer `1` (yes) would still export nothing. | accept for now; "no certification" is the honest answer for current projects | ACCEPTED-EMPTY (known limitation) |
 | 13 | `dmp/cost[*]/value + currency` | `project/costs/**` (18 attributes) | UNANSWERED (catalog does ask) | cost entries exported with value `None` until answered | decide per cost item whether an answer or an explicit "no costs" is exported | tracked in walkthrough (Group 5) |
+| 14 | `dataset/fields/type` | `project/dataset/type` | CATALOG-ABSENT | exported as `None` until a source exists | maDMP dataset `type` (e.g. "Dataset"); propose a fixed default at the EDO/export layer — decision pending | OPEN |
 
 ## Notes
 
@@ -40,3 +41,4 @@ Gap classes:
 
 - 2026-11-18 — register created after the decision to keep the standard RDMO catalog unchanged; items #1–#5, #10–#12 accepted, #6–#9 open.
 - 2026-11-18 — **items #6/#7 resolved:** `dmp_id` is minted at export time by the exporter plugin (`renderer.generate`, spec kinds `generated: urn_uuid5` + `fixed: urn`, seed `rdmo:project:{project.pk}`). Implementation: `components/socket-rdmo/madmp-exporter` (`renderer.py`), mapping spec `03_P03_S03_madmp-export.mapping.yaml` (synced to the bundled copy), validator `04_P04_S04_validate-export.py` traces generated/fixed rows. Project #4 mints `urn:uuid:d9e575a1-7ae1-588a-be39-b44574958fa0`. Caveat: stability depends on the RDMO project pk; a moved/re-created project would mint a new URN. #8/#9 (languages) remain open.
+- 2026-11-18 — **item #14 added:** discovered during walkthrough Group 2 that `project/dataset/type` has no question in any catalog (same structural class as the contact fields, #1/#2-adjacent). The validator's `in catalog` column only reflects domain-attribute existence, so the row had shown `in catalog: True` misleadingly.

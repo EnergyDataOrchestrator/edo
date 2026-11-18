@@ -1,7 +1,7 @@
 {
   "project_id": 4,
   "project_title": "Measurement_02",
-  "dumped": "2026-11-18T18:02:18.748909+00:00",
+  "dumped": "2026-11-18T18:23:40.189849+00:00",
   "answers": [
     {
       "attribute": "project/additional_rdm_policy/yesno",
@@ -238,6 +238,33 @@
       "option": null
     },
     {
+      "attribute": "project/dataset/preservation/purpose",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 0,
+      "text": "",
+      "value": "Basis of a publication / proof of good scientific practice",
+      "option": "preservation_motivation_options/131"
+    },
+    {
+      "attribute": "project/dataset/preservation/purpose",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 2,
+      "text": "",
+      "value": "Legal obligations",
+      "option": "preservation_motivation_options/132"
+    },
+    {
+      "attribute": "project/dataset/preservation/purpose",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 4,
+      "text": "",
+      "value": "Self-commitment",
+      "option": "preservation_motivation_options/134"
+    },
+    {
       "attribute": "project/dataset/preservation/repository_arrangements",
       "set_prefix": "",
       "set_index": 0,
@@ -262,6 +289,15 @@
       "collection_index": 0,
       "text": "A. Koubaa",
       "value": "A. Koubaa",
+      "option": null
+    },
+    {
+      "attribute": "project/dataset/preservation/yesno",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 0,
+      "text": "1",
+      "value": "Yes",
       "option": null
     },
     {

@@ -2,7 +2,7 @@
   "dmp": {
     "title": "maDMP for Measurement_02",
     "created": "2026-03-02T09:54:14.726258+00:00",
-    "modified": "2026-11-18T17:46:40.095665+00:00",
+    "modified": "2026-11-18T18:17:59.385231+00:00",
     "contributor": [
       {
         "name": "A. Koubaa",
@@ -43,6 +43,7 @@
           "BBPlG"
         ],
         "personal_data": "no",
+        "preservation_statement": "Basis of a publication / proof of good scientific practice; Legal obligations; Self-commitment",
         "security_and_privacy": [
           {
             "title": "Access authentication",

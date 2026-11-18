@@ -132,28 +132,40 @@ def trace_matrix(export, dmp, mapping):
                                      attribute__path=path)
                 .select_related('option'))
 
-    def row(location, kind, path, option_map=None, set_index=0, label=''):
-        exists = Attribute.objects.filter(path=path).exists()
-        values = list(answered(path))
+    def row(location, kind, path, option_map=None, set_index=0, label='', leaf=None):
+        exists = Attribute.objects.filter(path=path).exists() if path else False
+        values = list(answered(path)) if path else []
         texts = [v.text for v in values if v.text]
         option_uri_paths = [v.option.uri_path for v in values if v.option]
 
         resolved = None
         try:
-            spec = {'attribute': path}
-            if option_map is not None:
-                resolved = export.resolve_option(
-                    {'attribute': path, 'options': option_map}, set_index=set_index)
+            if leaf is not None:
+                if 'options' in leaf:
+                    resolved = export.resolve_option(leaf, set_index=set_index)
+                else:
+                    resolved = export.resolve(leaf, set_index=set_index)
             else:
-                resolved = export.resolve(spec, set_index=set_index)
+                spec = {'attribute': path}
+                if option_map is not None:
+                    resolved = export.resolve_option(
+                        {'attribute': path, 'options': option_map}, set_index=set_index)
+                else:
+                    resolved = export.resolve(spec, set_index=set_index)
         except Exception as exc:  # report, don't die
             resolved = f'<error: {exc}>'
 
-        # presence in the rendered output: the resolved term/value as string
-        present = bool(resolved is not None and
-                       (isinstance(resolved, (int, float, bool)) or str(resolved)) and
-                       (json.dumps(resolved, ensure_ascii=False).strip('"') in dmp_text
-                        or str(resolved) in dmp_text))
+        # presence in the rendered output: the resolved term/value as string.
+        # Booleans are exported by the renderer as "yes"/"no", so compare in
+        # that (quoted, JSON-value) form instead of the raw True/False.
+        if isinstance(resolved, bool):
+            display = 'yes' if resolved else 'no'
+            present = f'"{display}"' in dmp_text
+        else:
+            present = bool(resolved is not None and
+                           (isinstance(resolved, (int, float)) or str(resolved)) and
+                           (json.dumps(resolved, ensure_ascii=False).strip('"') in dmp_text
+                            or str(resolved) in dmp_text))
 
         status = 'OK'
         if not exists:
@@ -276,7 +288,7 @@ def trace_matrix(export, dmp, mapping):
                     'attribute', sub.get('attribute'))
         elif isinstance(spec, dict):
             row(f'dataset/fields/{name}', 'attribute-option',
-                spec.get('attribute'), spec.get('options'))
+                spec.get('attribute'), spec.get('options'), leaf=spec)
 
     # dataset_id identifier spec
     for slot in ('identifier', 'type', 'fallback_identifier'):
@@ -292,7 +304,8 @@ def trace_matrix(export, dmp, mapping):
             if name == 'title':
                 continue
             row(f'dataset/fields/distribution/{phase}/{name}',
-                'attribute-option', spec.get('attribute'), spec.get('options'))
+                'attribute-option', spec.get('attribute'), spec.get('options'),
+                leaf=spec)
 
     return rows
 

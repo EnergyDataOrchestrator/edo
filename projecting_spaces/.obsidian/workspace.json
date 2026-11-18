@@ -195,6 +195,10 @@
   },
   "active": "5d0729e563bff5a8",
   "lastOpenFiles": [
+    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-6.json",
+    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02.render.json",
+    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-groundtruth.json",
+    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-5.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/05_P05_S05_madmp-catalog-gaps.md",
     "EDO/Artefacts/05_Cards/CF1-004.md",
     "EDO/Artefacts/07_Fragments/01_Definition_low_level_Beispiel.md",
@@ -206,8 +210,6 @@
     "EDO/Artefacts/07_Fragments/scripts/dmp/semantico/semantico-3.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/semantico",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/validation-report.md",
-    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02.render.json",
-    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-groundtruth.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/04_P04_S04_validate-export.py",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02",
     "EDO/Artefacts/07_Fragments/02_DMP_Erstellung.md",
@@ -217,7 +219,6 @@
     "EDO/Artefacts/03_Methods/Databus.md",
     "EDO/Artefacts/03_Methods/Add and Update Questionaries in RDMO.md",
     "EDO/Artefacts/02_Models/mduid/abstract_model_trees.md",
-    "EDO/Artefacts/07_Fragments/scripts/dmp/Measurement_02.rdmo.dmp.json",
     "EDO/CF1.md",
     "EDO/Artefacts/05_Cards/CF2-001.md",
     "Projecting Workflow Guide.md",
@@ -229,7 +230,6 @@
     "EDO/CF3.md",
     "EDO/CF2.md",
     "EDO/Artefacts/07_Fragments/12_High_Level_Wiederholung.md",
-    "Topic.md",
-    "EDO ID Helper.md"
+    "Topic.md"
   ]
 }
