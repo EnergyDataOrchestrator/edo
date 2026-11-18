@@ -1,6 +1,6 @@
 # maDMP export validation report — project 4 "Measurement_02"
 
-*Run:* 2026-11-18T17:31:49.182150+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
+*Run:* 2026-11-18T17:42:56.124316+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
 
 Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement_02.render.json` (plugin render), this report.
 
@@ -11,7 +11,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 - `OK`: 18
 - `PATH-MISSING-IN-CATALOG`: 13
 - `RESOLVED-EMPTY`: 1
-- answered-but-not-exported values: 28
+- answered-but-not-exported values: 44
 - structural checks: 20/20 passed
 
 ## Traceability matrix (mapping spec -> RDMO -> maDMP)
@@ -85,33 +85,49 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 
 | attribute | set_index | text | note |
 |---|---|---|---|
+| `project/coordination/name` | 0 | A. Koubaa | no mapping spec (not part of the maDMP export) |
 | `project/coordination/name` | 0 | Institute for Automation and Applied Informatics | no mapping spec (not part of the maDMP export) |
 | `project/dataset/creation_methods` | 0 | Bundesnetzagentur (BNetzA) BBPlG network expansion variant 2 data extraction pip | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_analysis_end` | 0 | 2017-07-31 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/data_analysis_start` | 0 | 2017-06-13 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/data_cleansing_end` | 0 | 2017-06-13 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/data_cleansing_start` | 0 | 2017-06-01 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/data_collection_end` | 0 | 2017-03-31 | no mapping spec (not part of the maDMP export) |
-| `project/dataset/interoperability` | 0 | Available on Open trumph testing ecosystem Platform | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
-| `project/dataset/metadata/standards` | 0 | OEMETADATA Standard | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
-| `project/dataset/metadata/standards` | 0 | Open trumph testing ecosystem Ontology | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
-| `project/dataset/origin` | 0 | Bundesnetzagentur (BNetzA) | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
+| `project/dataset/data_collection_start` | 0 | 2017-01-01 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/interoperability` | 0 | CSV and JSON | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/interoperability` | 0 | trumph testing ecosystem | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/interoperability` | 0 | Available on Open trumph testing ecosystem Platform | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/metadata/mappings` | 0 | 0 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/metadata/scope` | 0 | DMP | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/metadata/standards` | 0 | OEMETADATA Standard | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/metadata/standards` | 0 | Open trumph testing ecosystem Ontology | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/origin` | 0 | Bundesnetzagentur (BNetzA) | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/pids/yesno` | 0 | 1 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/preservation/certification` | 0 | 0 | MAPPED-BUT-MISSING-IN-OUTPUT |
 | `project/dataset/preservation/embargo_period` | 0 | No. Data is available without embargo. | no mapping spec (not part of the maDMP export) |
-| `project/dataset/reproducibility` | 0 | Fully reproducible via official BNetzA sources[cite: 2] and OEMETADATA specifica | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
+| `project/dataset/preservation/repository_arrangements` | 0 | 0 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/reproducibility` | 0 | Fully reproducible via official BNetzA sources[cite: 2] and OEMETADATA specifica | no mapping spec (not part of the maDMP export) | option not in any option map |
 | `project/dataset/reuse_scenario` | 0 | Data are open to be reused under GeoNutzV[cite: 2]. No PII are published. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/reuse_scenario_usage` | 0 | Research and analysis on power grid expansion projects in Germany. | no mapping spec (not part of the maDMP export) |
-| `project/dataset/sharing/yesno` | 0 | Yes, externally for everyone | MAPPED-BUT-MISSING-IN-OUTPUT | option uri_path not in option map |
-| `project/dataset/size/volume` | 0 | 2 MBits | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
+| `project/dataset/sensitive_data/other/yesno` | 0 | 0 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/size/volume` | 0 | 2 MBits | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/software_documentation` | 0 | 1 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/storage/type` | 0 | GitLab. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/usage_description` | 0 | BBPlG power line project point dataset and metadata schema (variant 2) for trump | no mapping spec (not part of the maDMP export) |
-| `project/dataset/usage_support` | 0 | No | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
+| `project/dataset/usage_support` | 0 | No | no mapping spec (not part of the maDMP export) | option not in any option map |
 | `project/dataset/usage_technology` | 0 | Python pandas and OEMETADATA specification. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/versioning_strategy` | 0 | Internal GitLab (KIT) | no mapping spec (not part of the maDMP export) |
-| `project/dataset/versioning_tool` | 0 | KIT GitLab | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
+| `project/dataset/versioning_tool` | 0 | KIT GitLab | no mapping spec (not part of the maDMP export) | option not in any option map |
+| `project/dataset/versioning_yesno` | 0 | 1 | no mapping spec (not part of the maDMP export) |
 | `project/funder/id` | 0 | HMC | no mapping spec (not part of the maDMP export) |
 | `project/funder/name` | 0 | Helmholtz Metadata Collaboration | no mapping spec (not part of the maDMP export) |
 | `project/funder/rdm_policy` | 0 | German Research Foundation (DFG). | no mapping spec (not part of the maDMP export) |
+| `project/legal_aspects/international_yesno` | 0 | 0 | no mapping spec (not part of the maDMP export) |
+| `project/legal_aspects/ipr/yesno` | 0 | 0 | no mapping spec (not part of the maDMP export) |
+| `project/legal_aspects/official_approval/data_access_committee` | 0 | 0 | no mapping spec (not part of the maDMP export) |
+| `project/preservation/responsible_person/name` | 0 | A. Koubaa | no mapping spec (not part of the maDMP export) |
 | `project/preservation/selection_criteria` | 0 | Publication under GeoNutzV standards. | no mapping spec (not part of the maDMP export) |
-| `project/research_field/title` | 0 | trumph testing ecosystem Infrastructure | no mapping spec (not part of the maDMP export) | option uri_path not in option map |
+| `project/research_field/title` | 0 | trumph testing ecosystem Infrastructure | no mapping spec (not part of the maDMP export) | option not in any option map |
 | `project/research_question/title` | 0 | Analysis of BNetzA power line project points (variant 2) under BBPlG[cite: 2]. | no mapping spec (not part of the maDMP export) |
 
 ## Structural checks (madmp-lightmodel conformance)

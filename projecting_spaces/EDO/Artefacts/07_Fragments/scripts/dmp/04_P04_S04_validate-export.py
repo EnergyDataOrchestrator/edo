@@ -285,16 +285,25 @@ def trace_matrix(export, dmp, mapping):
 # step 3b: answered-but-not-exported gaps
 # ---------------------------------------------------------------------------
 
-def export_gaps(dmp, ground_truth, mapped_paths):
+def export_gaps(dmp, ground_truth, rows, option_map_keys=()):
     dmp_text = json.dumps(dmp, ensure_ascii=False)
+    # A value may be exported *transformed* (e.g. an option map turns
+    # 'Yes, externally for everyone' into 'open'), in which case the verbatim
+    # text check below would false-positive. The trace matrix is authoritative:
+    # if its row for this path reports in_output, the answer made it out.
+    exported_paths = {r['rdmo_path'] for r in rows if r['in_output']}
+    mapped_paths = {r['rdmo_path'] for r in rows}
     gaps = []
     for a in ground_truth['answers']:
-        if a['text'] and a['text'] not in dmp_text:
-            if a['attribute'] in mapped_paths:
-                a = {**a, 'note': 'MAPPED-BUT-MISSING-IN-OUTPUT'}
-            else:
-                a = {**a, 'note': 'no mapping spec (not part of the maDMP export)'}
-            gaps.append(a)
+        if not a['text'] or a['attribute'] in exported_paths:
+            continue
+        if a['attribute'] in mapped_paths:
+            note = 'MAPPED-BUT-MISSING-IN-OUTPUT'
+        else:
+            note = 'no mapping spec (not part of the maDMP export)'
+        if a['option'] and a['option'] not in option_map_keys:
+            note += ' | option not in any option map'
+        gaps.append({**a, 'note': note})
     return gaps
 
 
@@ -420,8 +429,6 @@ def write_report(path, ground_truth, rows, gaps, checks, render_identical, ui_fi
         lines.append('|---|---|---|---|')
         for g in gaps:
             note = g.get('note', '')
-            if g['option']:
-                note += ' | option uri_path not in option map'
             lines.append('| `{}` | {} | {} | {} |'.format(
                 g['attribute'], g['set_index'],
                 str(g['text'])[:80].replace('|', '\\|'), note))
@@ -490,7 +497,13 @@ def main():
     export = MaDMPExport('madmp', 'as maDMP', 'rdmo_madmp.exports.MaDMPExport')
     export.project = project
     rows = trace_matrix(export, dmp, mapping)
-    gaps = export_gaps(dmp, ground_truth, {r['rdmo_path'] for r in rows})
+    option_map_keys = {
+        key
+        for option_map in mapping.get('options', {}).values()
+        if isinstance(option_map, dict)
+        for key in option_map
+    }
+    gaps = export_gaps(dmp, ground_truth, rows, option_map_keys)
     checks = schema_checks({'dmp': dmp})
 
     # 4. report
