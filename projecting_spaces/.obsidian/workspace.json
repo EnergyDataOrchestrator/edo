@@ -17,16 +17,7 @@
                 "file": "Project Management Kanban.md",
                 "kanbanViewState": {
                   "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
+                  "list-collapse": []
                 }
               },
               "pinned": true,
