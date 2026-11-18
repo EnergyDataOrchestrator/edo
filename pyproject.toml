@@ -11,4 +11,8 @@ dependencies = [
     "openai>=3.46.0",
     "quantulum3[classifier]>=0.10.0",
     "schema-automator>=0.5.5",
+    "regimo-core",  # local submodule core/: ontology-aware Kafka bus library
 ]
+
+[tool.uv.sources]
+regimo-core = { path = "core" }
