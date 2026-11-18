@@ -1,8 +1,17 @@
 {
   "project_id": 4,
   "project_title": "Measurement_02",
-  "dumped": "2026-11-18T17:42:56.124316+00:00",
+  "dumped": "2026-11-18T18:02:18.748909+00:00",
   "answers": [
+    {
+      "attribute": "project/additional_rdm_policy/yesno",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 0,
+      "text": "",
+      "value": "No",
+      "option": "other_requirements_options/144"
+    },
     {
       "attribute": "project/coordination/name",
       "set_prefix": "",
@@ -35,8 +44,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-07-31",
-      "value": "2017-07-31",
+      "text": "2027-07-31",
+      "value": "2027-07-31",
       "option": null
     },
     {
@@ -44,8 +53,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-06-13",
-      "value": "2017-06-13",
+      "text": "2027-06-13",
+      "value": "2027-06-13",
       "option": null
     },
     {
@@ -53,8 +62,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-06-13",
-      "value": "2017-06-13",
+      "text": "2027-06-13",
+      "value": "2027-06-13",
       "option": null
     },
     {
@@ -62,8 +71,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-06-01",
-      "value": "2017-06-01",
+      "text": "2027-06-01",
+      "value": "2027-06-01",
       "option": null
     },
     {
@@ -71,8 +80,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-03-31",
-      "value": "2017-03-31",
+      "text": "2027-03-31",
+      "value": "2027-03-31",
       "option": null
     },
     {
@@ -80,8 +89,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-01-01",
-      "value": "2017-01-01",
+      "text": "2027-01-01",
+      "value": "2027-01-01",
       "option": null
     },
     {
@@ -89,8 +98,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2017 (Variant 2).",
-      "value": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2017 (Variant 2).",
+      "text": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2027 (Variant 2).",
+      "value": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2027 (Variant 2).",
       "option": null
     },
     {
@@ -269,8 +278,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "Data are open to be reused under GeoNutzV[cite: 2]. No PII are published.",
-      "value": "Data are open to be reused under GeoNutzV[cite: 2]. No PII are published.",
+      "text": "Data are open to be reused under GeoNutzV. No PII are published.",
+      "value": "Data are open to be reused under GeoNutzV. No PII are published.",
       "option": null
     },
     {
@@ -467,17 +476,17 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "trumph testing ecosystem Infrastructure",
-      "value": "Humanities and Social Sciences / Ancient Cultures",
-      "option": "research_fields/169"
+      "text": "",
+      "value": "Engineering Sciences / Systems Engineering",
+      "option": "research_fields/213"
     },
     {
       "attribute": "project/research_question/keywords",
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "trumph testing ecosystem",
-      "value": "trumph testing ecosystem",
+      "text": "Testing ecosystem",
+      "value": "Testing ecosystem",
       "option": null
     },
     {
@@ -494,8 +503,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "Analysis of BNetzA power line project points (variant 2) under BBPlG[cite: 2].",
-      "value": "Analysis of BNetzA power line project points (variant 2) under BBPlG[cite: 2].",
+      "text": "Analysis of BNetzA power line project points (variant 2) under BBPlG.",
+      "value": "Analysis of BNetzA power line project points (variant 2) under BBPlG.",
       "option": null
     },
     {
@@ -503,8 +512,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-07-31",
-      "value": "2017-07-31",
+      "text": "2027-07-31",
+      "value": "2027-07-31",
       "option": null
     },
     {
@@ -512,8 +521,8 @@
       "set_prefix": "",
       "set_index": 0,
       "collection_index": 0,
-      "text": "2017-01-01",
-      "value": "2017-01-01",
+      "text": "2027-01-01",
+      "value": "2027-01-01",
       "option": null
     }
   ]

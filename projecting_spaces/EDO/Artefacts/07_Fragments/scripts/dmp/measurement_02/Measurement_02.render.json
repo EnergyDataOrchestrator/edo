@@ -2,7 +2,7 @@
   "dmp": {
     "title": "maDMP for Measurement_02",
     "created": "2026-03-02T09:54:14.726258+00:00",
-    "modified": "2026-11-09T12:24:33.927859+00:00",
+    "modified": "2026-11-18T17:46:40.095665+00:00",
     "contributor": [
       {
         "name": "A. Koubaa",
@@ -20,7 +20,7 @@
     ],
     "dataset": [
       {
-        "description": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2017 (Variant 2).",
+        "description": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2027 (Variant 2).",
         "dataset_id": {
           "identifier": "bnetza_vorhabenpunkte_bbplg_2",
           "type": "other"
@@ -39,7 +39,7 @@
           }
         ],
         "keyword": [
-          "trumph testing ecosystem",
+          "Testing ecosystem",
           "BBPlG"
         ],
         "personal_data": "no",
@@ -53,12 +53,16 @@
         "title": "bnetza_vorhabenpunkte_bbplg_2"
       }
     ],
+    "dmp_id": {
+      "identifier": "urn:uuid:d9e575a1-7ae1-588a-be39-b44574958fa0",
+      "type": "urn"
+    },
     "project": [
       {
         "title": "Measurement_02",
         "description": "Example Measurement, as a child-project of IAI.",
-        "start": "2017-01-01",
-        "end": "2017-07-31"
+        "start": "2027-01-01",
+        "end": "2027-07-31"
       }
     ]
   }

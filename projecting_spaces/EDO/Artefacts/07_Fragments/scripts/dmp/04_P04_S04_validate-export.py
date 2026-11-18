@@ -219,10 +219,26 @@ def trace_matrix(export, dmp, mapping):
     for i, spec in enumerate(dmp_spec.get('cost', [])):
         row(f'dmp/cost[{i}] "{spec.get("title")}"', 'cost', spec.get('attribute'))
 
-    # dmp_id identifier spec
+    # dmp_id identifier spec — generated (no catalog path; gap register #6)
+    dmp_id_spec = dmp_spec.get('dmp_id') or {}
+    dmp_id_out = dmp.get('dmp_id') or {}
     for slot in ('identifier', 'type'):
-        spec = (dmp_spec.get('dmp_id') or {}).get(slot)
-        if spec:
+        spec = dmp_id_spec.get(slot)
+        if not spec:
+            continue
+        if 'generated' in spec or 'fixed' in spec:
+            kind = 'generated' if 'generated' in spec else 'fixed'
+            detail = spec.get('generated') or spec.get('fixed')
+            extra = f' (seed: {spec["seed"]})' if spec.get('seed') else ''
+            rows.append({
+                'mapping_location': f'dmp/dmp_id/{slot}', 'kind': kind,
+                'label': f'{detail}{extra}', 'rdmo_path': f'({kind})',
+                'in_catalog': '', 'answered': '', 'answer_texts': [],
+                'answer_option_uris': [], 'resolved': dmp_id_out.get(slot),
+                'in_output': slot in dmp_id_out,
+                'status': 'OK' if slot in dmp_id_out else 'NOT-IN-OUTPUT',
+            })
+        else:
             row(f'dmp/dmp_id/{slot}', 'attribute-option',
                 spec.get('attribute'), spec.get('options'))
 

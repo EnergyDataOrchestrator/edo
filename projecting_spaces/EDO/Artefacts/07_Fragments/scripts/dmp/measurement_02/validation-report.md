@@ -1,6 +1,6 @@
 # maDMP export validation report — project 4 "Measurement_02"
 
-*Run:* 2026-11-18T17:42:56.124316+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
+*Run:* 2026-11-18T18:02:18.748909+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
 
 Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement_02.render.json` (plugin render), this report.
 
@@ -8,10 +8,10 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 
 - mapping-spec rows: 62
 - `NOT-ANSWERED`: 30
-- `OK`: 18
-- `PATH-MISSING-IN-CATALOG`: 13
+- `OK`: 20
+- `PATH-MISSING-IN-CATALOG`: 11
 - `RESOLVED-EMPTY`: 1
-- answered-but-not-exported values: 44
+- answered-but-not-exported values: 43
 - structural checks: 20/20 passed
 
 ## Traceability matrix (mapping spec -> RDMO -> maDMP)
@@ -20,7 +20,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 |---|---|---|---|---|---|---|
 | `dmp/title` | `(project title)` |  |  | `maDMP for Measurement_02` | True | **OK** |
 | `dmp/created` | `project.created` |  |  | `2026-03-02T09:54:14.726258+00:00` | True | **OK** |
-| `dmp/modified` | `project.updated` |  |  | `2026-11-09T12:24:33.927859+00:00` | True | **OK** |
+| `dmp/modified` | `project.updated` |  |  | `2026-11-18T17:46:40.095665+00:00` | True | **OK** |
 | `dmp/contact/name` | `project/data_management/name` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dmp/contact/mbox` | `project/data_management/mbox` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dmp/contact/identifier` | `project/data_management/identifier` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
@@ -51,17 +51,17 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `dmp/cost[15] "Non personal costs for intellectual property rights"` | `project/costs/ipr/non_personnel` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dmp/cost[16] "Personal costs for preservation"` | `project/costs/preservation/personnel` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dmp/cost[17] "Non personal costs for preservation"` | `project/costs/preservation/non_personnel` | True | False | `None` | False | **NOT-ANSWERED** |
-| `dmp/dmp_id/identifier` | `project/dmp/identifier` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
-| `dmp/dmp_id/type` | `project/dmp/identifier_type` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
+| `dmp/dmp_id/identifier` | `(generated)` |  |  | `urn:uuid:d9e575a1-7ae1-588a-be39-b44574958fa0` | True | **OK** |
+| `dmp/dmp_id/type` | `(fixed)` |  |  | `urn` | True | **OK** |
 | `dmp/language` | `project/language` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
-| `dmp/project/start` | `project/schedule/project_start` | True | True | `2017-01-01` | True | **OK** |
-| `dmp/project/end` | `project/schedule/project_end` | True | True | `2017-07-31` | True | **OK** |
+| `dmp/project/start` | `project/schedule/project_start` | True | True | `2027-01-01` | True | **OK** |
+| `dmp/project/end` | `project/schedule/project_end` | True | True | `2027-07-31` | True | **OK** |
 | `dmp/project/title` | `project.title` |  |  | `Measurement_02` | True | **OK** |
 | `dmp/project/description` | `project.description` |  |  | `Example Measurement, as a child-project of IAI.` | True | **OK** |
 | `dataset/fields/data_quality_assurance` | `project/dataset/quality_assurance` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dataset/fields/description` | `project/dataset/description` | True | True | `Der Datensatz enthält die Netzausbauvorhaben des Bundesbedar` | True | **OK** |
 | `dataset/fields/issued` | `project/dataset/data_publication_date` | True | False | `None` | False | **NOT-ANSWERED** |
-| `dataset/fields/keyword` | `project/research_question/keywords` | True | True | `trumph testing ecosystem` | True | **OK** |
+| `dataset/fields/keyword` | `project/research_question/keywords` | True | True | `Testing ecosystem` | True | **OK** |
 | `dataset/fields/language` | `project/dataset/language` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
 | `dataset/fields/personal_data` | `project/dataset/sensitive_data/personal_data_yesno/yesno` | True | True | `0` | True | **OK** |
 | `dataset/fields/preservation_statement` | `project/dataset/preservation/purpose` | True | False | `None` | False | **NOT-ANSWERED** |
@@ -88,12 +88,12 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `project/coordination/name` | 0 | A. Koubaa | no mapping spec (not part of the maDMP export) |
 | `project/coordination/name` | 0 | Institute for Automation and Applied Informatics | no mapping spec (not part of the maDMP export) |
 | `project/dataset/creation_methods` | 0 | Bundesnetzagentur (BNetzA) BBPlG network expansion variant 2 data extraction pip | no mapping spec (not part of the maDMP export) |
-| `project/dataset/data_analysis_end` | 0 | 2017-07-31 | no mapping spec (not part of the maDMP export) |
-| `project/dataset/data_analysis_start` | 0 | 2017-06-13 | no mapping spec (not part of the maDMP export) |
-| `project/dataset/data_cleansing_end` | 0 | 2017-06-13 | no mapping spec (not part of the maDMP export) |
-| `project/dataset/data_cleansing_start` | 0 | 2017-06-01 | no mapping spec (not part of the maDMP export) |
-| `project/dataset/data_collection_end` | 0 | 2017-03-31 | no mapping spec (not part of the maDMP export) |
-| `project/dataset/data_collection_start` | 0 | 2017-01-01 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_analysis_end` | 0 | 2027-07-31 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_analysis_start` | 0 | 2027-06-13 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_cleansing_end` | 0 | 2027-06-13 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_cleansing_start` | 0 | 2027-06-01 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_collection_end` | 0 | 2027-03-31 | no mapping spec (not part of the maDMP export) |
+| `project/dataset/data_collection_start` | 0 | 2027-01-01 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/interoperability` | 0 | CSV and JSON | no mapping spec (not part of the maDMP export) | option not in any option map |
 | `project/dataset/interoperability` | 0 | trumph testing ecosystem | no mapping spec (not part of the maDMP export) | option not in any option map |
 | `project/dataset/interoperability` | 0 | Available on Open trumph testing ecosystem Platform | no mapping spec (not part of the maDMP export) | option not in any option map |
@@ -107,7 +107,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `project/dataset/preservation/embargo_period` | 0 | No. Data is available without embargo. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/preservation/repository_arrangements` | 0 | 0 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/reproducibility` | 0 | Fully reproducible via official BNetzA sources[cite: 2] and OEMETADATA specifica | no mapping spec (not part of the maDMP export) | option not in any option map |
-| `project/dataset/reuse_scenario` | 0 | Data are open to be reused under GeoNutzV[cite: 2]. No PII are published. | no mapping spec (not part of the maDMP export) |
+| `project/dataset/reuse_scenario` | 0 | Data are open to be reused under GeoNutzV. No PII are published. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/reuse_scenario_usage` | 0 | Research and analysis on power grid expansion projects in Germany. | no mapping spec (not part of the maDMP export) |
 | `project/dataset/sensitive_data/other/yesno` | 0 | 0 | no mapping spec (not part of the maDMP export) |
 | `project/dataset/size/volume` | 0 | 2 MBits | no mapping spec (not part of the maDMP export) | option not in any option map |
@@ -127,8 +127,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `project/legal_aspects/official_approval/data_access_committee` | 0 | 0 | no mapping spec (not part of the maDMP export) |
 | `project/preservation/responsible_person/name` | 0 | A. Koubaa | no mapping spec (not part of the maDMP export) |
 | `project/preservation/selection_criteria` | 0 | Publication under GeoNutzV standards. | no mapping spec (not part of the maDMP export) |
-| `project/research_field/title` | 0 | trumph testing ecosystem Infrastructure | no mapping spec (not part of the maDMP export) | option not in any option map |
-| `project/research_question/title` | 0 | Analysis of BNetzA power line project points (variant 2) under BBPlG[cite: 2]. | no mapping spec (not part of the maDMP export) |
+| `project/research_question/title` | 0 | Analysis of BNetzA power line project points (variant 2) under BBPlG. | no mapping spec (not part of the maDMP export) |
 
 ## Structural checks (madmp-lightmodel conformance)
 
@@ -137,7 +136,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | tree root object has "dmp" | ✅ |  |
 | dmp/title required and non-empty | ✅ |  |
 | dmp/created is ISO-8601 timestamp | ✅ | 2026-03-02T09:54:14.726258+00:00 |
-| dmp/modified is ISO-8601 timestamp | ✅ | 2026-11-09T12:24:33.927859+00:00 |
+| dmp/modified is ISO-8601 timestamp | ✅ | 2026-11-18T17:46:40.095665+00:00 |
 | dmp/contributor is a list (if present) | ✅ |  |
 | dmp/contributor[0] has name (str) | ✅ |  |
 | dmp/contributor[0].role is list of str | ✅ |  |
