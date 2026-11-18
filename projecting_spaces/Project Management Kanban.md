@@ -20,7 +20,6 @@ kanban-plugin: board
 
 ## CF1 — Access Available Sources of Information
 
-- [ ] [[CF1-001]] Implement the [[Databus]] as a separated Kafka-Broker {{due::2026-11-27}}
 - [ ] [[CF1-003]] 01 ● Definition low level Beispiel (Messreihe) {{due::2026-12-04}}
 - [ ] [[CF1-005]] 03 ● SMS Beschreibung {{due::2026-12-11}}
 - [ ] [[CF1-006]] 04 ● Internes Format Beschreibung {{due::2026-12-18}}
@@ -61,7 +60,7 @@ kanban-plugin: board
 ## ✅ Done
 
 - [x] [[CF1-004]] 02 ● DMP Erstellung {{due::2026-11-20}} {{done::2026-11-17}}
-
+- [x] [[CF1-001]] Implement the [[Databus]] as a separated Kafka-Broker {{due::2026-11-27}} {{done::2026-11-18}}
 
 
 
