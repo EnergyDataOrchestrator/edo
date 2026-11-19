@@ -2,7 +2,8 @@
     "@context": [
         "https://w3id.org/ro/crate/1.1/context",
         {
-            "prov": "http://www.w3.org/ns/prov#"
+            "prov": "http://www.w3.org/ns/prov#",
+            "dcterms": "http://purl.org/dc/terms/"
         }
     ],
     "@graph": [
@@ -20,7 +21,7 @@
             "@id": "./",
             "@type": "Dataset",
             "name": "Provenance crate for 05_P05_S05_internal-format.schema.json (F11)",
-            "description": "RO-Crate 1.1 documenting the regeneration of the EDO internal-format JSON Schema and the provenance of this version. The crate contains COPIES of the two files that constitute the version (the generated JSON Schema and its LinkML source) and REFERENCES (relative paths into the repository, not copied) to the files that shaped it: the internal-format specification, the sibling source-side schemas, the transformation patterns and the LinkML Maps compiled from them, the two realisations of the transformation (trip.py, agnostic_trip.py), the trafos documentation, and the cards in which the version's history was decided and logged. Findings catalogue: ../trafos/README.md, F11. Repository state: regenerated after e7a8d20; the superseded predecessor of the JSON Schema is commit 09a25eb (blob 14c33a8b9064c8d81d413f45c3dbc3baea7f5917).",
+            "description": "RO-Crate 1.1 documenting the regeneration of the EDO internal-format JSON Schema and the provenance of this version. The crate contains COPIES of the two files that constitute the version (the generated JSON Schema and its LinkML source) plus everything needed to REPEAT the generation from the source alone: reproduce.sh, the pinned Python environment (environment/pip-freeze.txt) and the linkml:types module resolved during the run (environment/linkml-types.yaml) — the library itself is identified by version and pinned via the freeze. It further contains REFERENCES (relative paths into the repository, not copied) to the files that shaped the version: the internal-format specification, the sibling source-side schemas, the transformation patterns and the LinkML Maps compiled from them, the two realisations of the transformation (trip.py, agnostic_trip.py), the trafos documentation, and the cards in which the version's history was decided and logged. Findings catalogue: ../trafos/README.md, F11. Repository state: regenerated after e7a8d20; the superseded predecessor of the JSON Schema is commit 09a25eb (blob 14c33a8b9064c8d81d413f45c3dbc3baea7f5917).",
             "datePublished": "2026-11-19",
             "hasPart": [
                 {
@@ -28,6 +29,15 @@
                 },
                 {
                     "@id": "05_P05_S05_internal-format-schema.yaml"
+                },
+                {
+                    "@id": "reproduce.sh"
+                },
+                {
+                    "@id": "environment/pip-freeze.txt"
+                },
+                {
+                    "@id": "environment/linkml-types.yaml"
                 }
             ],
             "mentions": [
@@ -73,6 +83,9 @@
             "prov:wasGeneratedBy": {
                 "@id": "#cf2-004-schema-reconciliation"
             },
+            "dcterms:requires": {
+                "@id": "environment/linkml-types.yaml"
+            },
             "prov:wasDerivedFrom": [
                 {
                     "@id": "../../internal-format/04_P04_S04_internal-format-spec.md"
@@ -89,12 +102,17 @@
             "@id": "#gen-json-schema-run-20261119T1834",
             "@type": "CreateAction",
             "name": "gen-json-schema run regenerating the internal-format JSON Schema (F11)",
-            "description": "Command: `.venv/bin/gen-json-schema projecting_spaces/EDO/Artefacts/07_Fragments/scripts/linkml/05_P05_S05_internal-format-schema.yaml > 05_P05_S05_internal-format.schema.json` (run from the repository root, default options). Triggered by finding F11 in the CF2-004 findings catalogue (../trafos/README.md): the schema edits of the reconciliation made the previously generated JSON Schema stale.",
+            "description": "Command: `.venv/bin/gen-json-schema projecting_spaces/EDO/Artefacts/07_Fragments/scripts/linkml/05_P05_S05_internal-format-schema.yaml > 05_P05_S05_internal-format.schema.json` (run from the repository root, default options). Triggered by finding F11 in the CF2-004 findings catalogue (../trafos/README.md): the schema edits of the reconciliation made the previously generated JSON Schema stale. The process is repeatable from the crate contents alone: reproduce.sh runs the same generator over the archived source under the environment pinned in environment/pip-freeze.txt (with environment/linkml-types.yaml as the resolution target of the source's `imports: linkml:types`); verified 2026-11-19 — the output was byte-identical to the archived result.",
             "startTime": "2026-11-19T18:34:08+01:00",
             "endTime": "2026-11-19T18:34:09+01:00",
-            "instrument": {
-                "@id": "#linkml-gen-json-schema"
-            },
+            "instrument": [
+                {
+                    "@id": "#linkml-gen-json-schema"
+                },
+                {
+                    "@id": "reproduce.sh"
+                }
+            ],
             "object": {
                 "@id": "05_P05_S05_internal-format-schema.yaml"
             },
@@ -108,7 +126,42 @@
             "name": "LinkML gen-json-schema",
             "softwareVersion": "1.11.1",
             "downloadUrl": "https://pypi.org/project/linkml/1.11.1/",
-            "description": "Installed in the repository .venv. Version pinned to 1.11.1 because linkml-map 0.5.2 (F8, CF2-004) requires it; as a consequence the generated file reports metamodel_version 1.11.0, whereas the superseded predecessor was generated with linkml 1.12.0 (metamodel_version 1.12.0)."
+            "description": "Installed in the repository .venv. Version pinned to 1.11.1 because linkml-map 0.5.2 (F8, CF2-004) requires it; as a consequence the generated file reports metamodel_version 1.11.0, whereas the superseded predecessor was generated with linkml 1.12.0 (metamodel_version 1.12.0). The library itself is not copied into the crate; it is identified by name and version here and — together with its full dependency closure — by the environment snapshot environment/pip-freeze.txt.",
+            "dcterms:requires": {
+                "@id": "environment/pip-freeze.txt"
+            }
+        },
+        {
+            "@id": "reproduce.sh",
+            "@type": [
+                "File",
+                "SoftwareSourceCode"
+            ],
+            "name": "Reproduction script for the JSON Schema generation",
+            "description": "COPY (in the crate): shell script repeating the generation of 05_P05_S05_internal-format.schema.json from the archived LinkML source; run from the crate root (`sh reproduce.sh`). Encodes the generation step of #gen-json-schema-run-20261119T1834; requires the environment pinned in environment/pip-freeze.txt. Verified 2026-11-19: the run over the archived source reproduced the archived JSON Schema byte-identically.",
+            "encodingFormat": "text/x-shellscript",
+            "dcterms:requires": [
+                {
+                    "@id": "#linkml-gen-json-schema"
+                },
+                {
+                    "@id": "environment/pip-freeze.txt"
+                }
+            ]
+        },
+        {
+            "@id": "environment/pip-freeze.txt",
+            "@type": "File",
+            "name": "Pinned Python environment of the generation run",
+            "description": "COPY (in the crate): full `pip freeze` of the repository .venv used for the run, with interpreter (Python 3.12.12), platform (Darwin arm64) and generator pinning in the header; installable via `pip install -r`. Copied because the generating library and its dependencies are not referenceable from the repository — this snapshot plus the SoftwareApplication #linkml-gen-json-schema makes the generation process repeatable.",
+            "encodingFormat": "text/plain"
+        },
+        {
+            "@id": "environment/linkml-types.yaml",
+            "@type": "File",
+            "name": "linkml:types module as resolved during the generation",
+            "description": "COPY (in the crate): the types module of the installed linkml-runtime 1.11.1 (linkml_runtime/linkml_model/model/schema/types.yaml) — the resolution target of the `imports: linkml:types` statement in 05_P05_S05_internal-format-schema.yaml during the generation run. Copied because it lives inside the installed library and is not referenceable from the repository; regeneration must use the pinned linkml/linkml-runtime 1.11.1 so that this module (and only this module) is imported.",
+            "encodingFormat": "text/x-yaml"
         },
         {
             "@id": "#cf2-004-schema-reconciliation",

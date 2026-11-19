@@ -9,12 +9,17 @@ see `../trafos/README.md`, section 13).
 
 ## What the crate contains
 
-**Copies** (the two files that *are* the version):
+**Copies** (the files that *are* the version, plus everything needed to
+repeat the generation — the crate is self-sufficient for the generation
+process):
 
 | File | Role |
 |---|---|
 | `05_P05_S05_internal-format.schema.json` | The generated JSON Schema (this version). Draft 2019-09, `metamodel_version 1.11.0`. |
 | `05_P05_S05_internal-format-schema.yaml` | The LinkML schema — the direct source this version was generated from. |
+| `reproduce.sh` | Shell script repeating the generation from the archived source; run from the crate root (`sh reproduce.sh`). Verified 2026-11-19: output byte-identical to the archived JSON Schema. |
+| `environment/pip-freeze.txt` | Full `pip freeze` of the repository `.venv` used for the run (Python 3.12.12, Darwin arm64; `linkml==1.11.1`, `linkml-runtime==1.11.1`, pinned for `linkml-map==0.5.2` per F8), with the interpreter/platform in the header; installable via `pip install -r`. Copied because the generating library and its dependencies are not referenceable from the repository. |
+| `environment/linkml-types.yaml` | The `linkml:types` module as resolved during the run — for the pinned versions it is the bundled `linkml_runtime/linkml_model/model/schema/types.yaml` of linkml-runtime 1.11.1, the resolution target of the source's `imports: linkml:types`. Copied because it lives inside the installed library. |
 
 **References** (files outside the crate, addressed by repository-relative
 paths from the crate root; they are *not* copied — they stay where they are
@@ -54,6 +59,33 @@ to do with the version:
    18:34 +01:00, recorded as `CreateAction` `#gen-json-schema-run-20261119T1834`
    with `instrument`, `object`, `result`, `startTime`/`endTime`.
 
+## Repeating the generation from the crate alone
+
+The provenance graph is closed for the generation step — from the crate
+contents it is possible to repeat the process end to end:
+
+1. create an environment matching `environment/pip-freeze.txt`
+   (`pip install -r environment/pip-freeze.txt`; the run used Python 3.12.12);
+2. run `sh reproduce.sh` in the crate root — it invokes
+   `gen-json-schema 05_P05_S05_internal-format-schema.yaml >
+   05_P05_S05_internal-format.schema.json`;
+3. the output is byte-identical to the archived
+   `05_P05_S05_internal-format.schema.json` (verified 2026-11-19).
+
+The relationship chain in `ro-crate-metadata.json` encodes this:
+`#gen-json-schema-run-20261119T1834` (`CreateAction`) has `instrument` →
+`#linkml-gen-json-schema` (SoftwareApplication, version 1.11.1) and
+`reproduce.sh`, `object` → the LinkML source copy, `result` → the JSON Schema
+copy; `reproduce.sh` and the software `dcterms:requires` the environment
+snapshot, and the LinkML source `dcterms:requires`
+`environment/linkml-types.yaml` (its import resolution).
+
+Note on completeness: the linkml library itself is not copied into the crate
+(its version is recorded on the SoftwareApplication and its dependency
+closure is pinned in the freeze). If bit-level replication of the
+environment is required, create the environment from the freeze on the same
+platform (Python 3.12.12, Darwin arm64) as recorded in the header.
+
 Version identity for reproducibility:
 
 - predecessor blob: `14c33a8b9064c8d81d413f45c3dbc3baea7f5917`
@@ -67,7 +99,8 @@ Version identity for reproducibility:
 
 - Provenance vocabulary: schema.org (`CreateAction`, `object`/`result`/
   `instrument`/`startTime`/`endTime`) plus PROV terms (`wasGeneratedBy`,
-  `wasDerivedFrom`) via the additional `prov` context entry.
+  `wasDerivedFrom`) and `dcterms:requires` via the additional `prov` and
+  `dcterms` context entries.
 - External files are referenced with repository-relative paths although
   RO-Crate 1.1 prescribes absolute URLs for external entities — a pragmatic
   deviation kept deliberately so the crate stays resolvable inside the
