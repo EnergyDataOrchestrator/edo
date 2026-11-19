@@ -19,7 +19,20 @@ Im ersten Schritt wird ein konkretes, einfaches Szenario definiert, das als Test
 - [x] Messparameter definieren
 - [x] Zeitrahmen festlegen
 - [x] Beteiligte Systeme identifizieren
-- [ ] Erwartete Outputs dokumentieren
+- [x] Erwartete Outputs dokumentieren
+
+## Erwartete Outputs
+
+1. **Messreihen-CSV** — Air-Temperature-Messreihe der Weatherstation Q3-2026
+   (Sensor PIDINST 21.11157/9b6cdfb9-a4fb-4269-af04-1ef94588f5a8), Zeitraum
+   2026-07-01 bis 2026-09-30, kontinuierliche Aufzeichnung mit einem
+   Sampling-Intervall von 15 Minuten, Ablage im KIT GitLab.
+2. **maDMP-Export** — maschinenlesbares maDMP-JSON aus RDMO
+   (http://localhost:8484/projects/6/) via madmp-exporter.
+3. **Internes EDO-Format** — aus dem maDMP transformierte projektinterne Repräsentation.
+4. **RO-Crate** — Verpackung der CSV + Metadaten als Research Object Crate.
+5. **OEP-Beschreibung** — OEMetadata-konforme Beschreibung der Messreihe
+   für die Veröffentlichung auf der Open Energy Platform.
 
 ## Notizen
 
@@ -30,5 +43,5 @@ Im ersten Schritt wird ein konkretes, einfaches Szenario definiert, das als Test
 
 ---
 
-**Status:** ⏳ Ausstehend
+**Status:** ✅ Abgeschlossen
 **Nächster Schritt:** [[02_DMP_Erstellung]]

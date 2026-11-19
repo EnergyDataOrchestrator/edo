@@ -195,6 +195,11 @@
   },
   "active": "5d0729e563bff5a8",
   "lastOpenFiles": [
+    "EDO/Artefacts/07_Fragments/scripts/sms/device-67-property-159-air-temperature.json",
+    "EDO/Artefacts/07_Fragments/scripts/sms/device-67.json",
+    "EDO/Artefacts/07_Fragments/scripts/sms",
+    "EDO/Artefacts/05_Cards/CF1-005.md",
+    "Project Management Kanban.md",
     "EDO/Artefacts/05_Cards/CF1-009.md",
     "EDO/Artefacts/05_Cards/CF1-008.md",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-13.json",
@@ -205,13 +210,10 @@
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-8.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-7.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-6.json",
-    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02.render.json",
-    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-groundtruth.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/05_P05_S05_madmp-catalog-gaps.md",
     "EDO/Artefacts/05_Cards/CF1-004.md",
     "EDO/Artefacts/07_Fragments/01_Definition_low_level_Beispiel.md",
     "EDO/Artefacts/05_Cards/CF1-003.md",
-    "Project Management Kanban.md",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/validation-report.md",
     "EDO/Artefacts/07_Fragments/02_DMP_Erstellung.md",
     "EDO/Artefacts/07_Fragments/00_Index.md",
@@ -228,8 +230,6 @@
     "ch_07_00.md",
     "EDO/Artefacts/05_Cards/CF1-007.md",
     "EDO/CF4.md",
-    "EDO/CF3.md",
-    "EDO/CF2.md",
-    "EDO/Artefacts/07_Fragments/12_High_Level_Wiederholung.md"
+    "EDO/CF3.md"
   ]
 }
