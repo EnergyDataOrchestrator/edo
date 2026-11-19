@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------------
+# docker-compose.yml — Apache Jena Fuseki prototype for the EDO/Regimo graph
+#
+# Serves two datasets:
+#   /projects  — TDB2 store for internal-format instance graphs (maDMP + SMS
+#                → internal format). Load with curl to /projects/data or the
+#                Fuseki UI (http://localhost:3030).
+#   /shapes    — in-memory read side exposing the SHACL claim shapes
+#                (shapes/project-claim-shapes.ttl) via SPARQL.
+#
+# Quick start:
+#   docker compose up -d                    # start Fuseki
+#   open http://localhost:3030              # Fuseki UI
+#   # load the example instance graph:
+#   docker compose exec fuseki /bin/sh -c \
+#     "curl -s -X POST -H 'Content-Type: text/turtle' \
+#      --data-binary @/data/sample-project.ttl \
+#      http://localhost:3030/projects/data?graph=urn:projects:measurement-02"
+#
+# Validate the graph against the claim shapes (host pyshacl):
+#   pyshacl -s shapes/project-claim-shapes.ttl \
+#           -d scripts/internal-format/measurement-02.ttl \
+#           -e shapes/project-claim-shapes.ttl
+#
+# ---------------------------------------------------------------------------
+services:
+  fuseki:
+    # stainless/jena-fuseki is the actively maintained Apache Jena Fuseki image.
+    image: stainless/jena-fuseki:5.1.0
+    container_name: edo-fuseki-proto
+    ports:
+      - "3030:3030"
+    environment:
+      # Fuseki operator password — override with FUSEKI_ADMIN_PASSWORD in .env.
+      ADMIN_PASSWORD: "${FUSEKI_ADMIN_PASSWORD:-edo-proto}"
+      # Serve the datasets defined in config/projects-ds.ttl (mounted below).
+      FUSEKI_BASE: /fuseki
+      # In-memory for ephemeral /shapes; TDB2 store under /fuseki/databases
+      # persists across restarts via the named volume.
+    volumes:
+      - ./config:/fuseki/configuration                                    # *.ttl dataset assemblers
+      - ./shapes:/fuseki/shapes:ro                                         # referenced by the shapes assembler
+      - fuseki-data:/fuseki/databases                                      # TDB2 persistence for /projects
+      - ./data:/data:ro                                                    # seed graphs (e.g. sample-project.ttl)
+    # healthcheck — TDB2 keeps a lock; make sure stop is graceful.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3030/$/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  fuseki-data:
