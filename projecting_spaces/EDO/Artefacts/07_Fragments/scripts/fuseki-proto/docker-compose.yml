@@ -1,21 +1,21 @@
 # ---------------------------------------------------------------------------
 # docker-compose.yml — Apache Jena Fuseki prototype for the EDO/Regimo graph
 #
-# Serves two datasets:
+# Serves two datasets (Fuseki **full** — web UI + admin endpoints):
 #   /projects  — TDB2 store for internal-format instance graphs (maDMP + SMS
-#                → internal format). Load with curl to /projects/data or the
-#                Fuseki UI (http://localhost:3030).
+#                → internal format). Load with `fuseki-proto load` or curl to
+#                /projects/data.
 #   /shapes    — in-memory read side exposing the SHACL claim shapes
-#                (shapes/project-claim-shapes.ttl) via SPARQL.
+#                (shapes/project-claim-shapes.ttl), seeded by `fuseki-proto
+#                start` on each boot.
+#
+# Fuseki Full auto-scans $FUSEKI_BASE/configuration/ for dataset assemblers, so
+# `config/*.ttl` (mounted below) is picked up on boot — no --config needed.
 #
 # Quick start:
-#   docker compose up -d                    # start Fuseki
-#   open http://localhost:3030              # Fuseki UI
-#   # load the example instance graph:
-#   docker compose exec fuseki /bin/sh -c \
-#     "curl -s -X POST -H 'Content-Type: text/turtle' \
-#      --data-binary @/data/sample-project.ttl \
-#      http://localhost:3030/projects/data?graph=urn:projects:measurement-02"
+#   docker compose up -d                    # start Fuseki (host port, see override)
+#   fuseki-proto start                      # build + up + seed /shapes (preferred)
+#   open http://localhost:3031/             # Fuseki web UI
 #
 # Validate the graph against the claim shapes (host pyshacl):
 #   pyshacl -s shapes/project-claim-shapes.ttl \
@@ -25,26 +25,38 @@
 # ---------------------------------------------------------------------------
 services:
   fuseki:
-    # stainless/jena-fuseki is the actively maintained Apache Jena Fuseki image.
-    image: stainless/jena-fuseki:5.1.0
+    # Apache Jena does NOT publish a pre-built Fuseki image to any registry —
+    # the `stainless/jena-fuseki` image previously referenced here 404s on
+    # Docker Hub. We therefore build the **Full** distribution from source
+    # (see ./docker/Dockerfile, JENA_VERSION pinned to 5.1.0).
+    #   docker compose build   # (re)build the image
+    build: ./docker
+    image: edo-fuseki-proto:jena-5.1.0-full   # local tag the build is stored under
     container_name: edo-fuseki-proto
-    ports:
-      - "3030:3030"
+    # NOTE: the *host* publishing is intentionally NOT set here — it is declared
+    # in docker-compose.override.yml (auto-loaded) so that the prototype binds to
+    # a non-conflicting host port (default 3031) and never fights the host Fuseki
+    # that serves the ORKG database on 3030.
+    # The container port stays 3030 (Fuseki's internal default).
+    # ports:  # (see docker-compose.override.yml)
     environment:
       # Fuseki operator password — override with FUSEKI_ADMIN_PASSWORD in .env.
       ADMIN_PASSWORD: "${FUSEKI_ADMIN_PASSWORD:-edo-proto}"
-      # Serve the datasets defined in config/projects-ds.ttl (mounted below).
+      # FUSEKI_BASE is already set in the image (the distribution dir /fuseki);
+      # it is repeated here for clarity. Full auto-scans /fuseki/configuration.
       FUSEKI_BASE: /fuseki
       # In-memory for ephemeral /shapes; TDB2 store under /fuseki/databases
       # persists across restarts via the named volume.
+    # Full auto-scans $FUSEKI_BASE/configuration/ (no --config needed).
     volumes:
       - ./config:/fuseki/configuration                                    # *.ttl dataset assemblers
-      - ./shapes:/fuseki/shapes:ro                                         # referenced by the shapes assembler
+      - ./shapes:/fuseki/shapes:ro                                         # host seed source for /shapes (CLI)
       - fuseki-data:/fuseki/databases                                      # TDB2 persistence for /projects
       - ./data:/data:ro                                                    # seed graphs (e.g. sample-project.ttl)
     # healthcheck — TDB2 keeps a lock; make sure stop is graceful.
+    # Fuseki Full exposes the /$/ping admin endpoint, so use it for liveness.
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3030/$/ping"]
+      test: ["CMD", "curl", "-sf", "-o", "/dev/null", "http://localhost:3030/$/ping"]
       interval: 10s
       timeout: 5s
       retries: 5

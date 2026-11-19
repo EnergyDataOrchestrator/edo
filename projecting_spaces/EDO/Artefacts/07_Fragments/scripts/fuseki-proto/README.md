@@ -21,36 +21,87 @@ classes, §3.3 controlled vocabularies) and the LinkML schema from CF1-007
 
 ```
 fuseki-proto/
-├── docker-compose.yml      # Fuseki 5 (TDB2 + in-memory datasets)
+├── docker-compose.yml            # Fuseki 5 Full (TDB2 + in-memory datasets); container port 3030, NO host publish
+├── docker-compose.override.yml   # AUTO-MERGED: sole host publish, remaps to 3031 (avoids the ORKG Fuseki)
+├── docker/
+│   ├── Dockerfile                # builds Fuseki **Full** FROM SOURCE (Apache ships no registry image)
+│   ├── download.sh               #   fetches apache-jena-fuseki-<ver>.zip from Maven Central (checksummed)
+│   ├── entrypoint.sh             #   runs the distribution's `fuseki-server` launcher (web UI + /$/admin)
+│   └── log4j2.properties         #   logging config baked into the image
 ├── config/
-│   └── projects-ds.ttl     # dataset assemblers: /projects (TDB2), /shapes (mem)
+│   ├── projects-ds.ttl           # dataset assembler for /projects (TDB2) — auto-scanned by Full
+│   └── shapes-ds.ttl             # dataset assembler for /shapes (in-memory) — auto-scanned by Full
 ├── shapes/
-│   └── project-claim-shapes.ttl   # SHACL node shapes for a Project claim
-└── data/
-    └── sample-project.ttl  # spec §4 example translated to Turtle
+│   └── project-claim-shapes.ttl  # SHACL node shapes for a Project claim
+├── data/
+│   ├── sample-project.ttl        # spec §4 example translated to Turtle
+│   └── backups/                  # created by `fuseki-proto backup` (git-ignored)
+└── tool/                         # src-layout Python CLI (`pip install -e tool`);
+    └── src/fuseki_proto/         #   lifecycle + backup/restore/load/wipe (see tool/README.md)
 ```
+
+> **Port:** Docker Compose auto-loads `docker-compose.override.yml`, so the
+> prototype serves on host port **3031** by default. Host `3030` stays free for
+> the system-managed Jena Fuseki that serves the ORKG database
+> (`/Library/LaunchDaemons/org.apache.jena.fuseki.plist`). `fuseki-proto`
+> defaults to `--port 3031`.
 
 ## Run
 
+Apache Jena does **not** publish a pre-built Fuseki image to any registry (the
+`stainless/jena-fuseki` reference this prototype used initially no longer
+exists on Docker Hub). The image is therefore **built locally from source** via
+`docker/`. It installs the **Fuseki Full** distribution (the
+`apache-jena-fuseki-<ver>.zip` webapp), pinned in the `Dockerfile`. Fuseki Full
+provides the **web UI** and the **admin endpoints** (`/$/ping`, `/$/server`,
+`/$/backup`, …) and **auto-scans `$FUSEKI_BASE/configuration/`** for dataset
+assemblers, so `config/*.ttl` is picked up on boot without any `--config`.
+
+The CLI builds automatically on start:
+
 ```bash
-docker compose up -d                # http://localhost:3030
+fuseki-proto start            # = docker compose build && docker compose up -d, then seed /shapes
 ```
 
+or equivalently, manually:
+
+```bash
+docker compose build          # build once (only needed after JENA_VERSION changes)
+docker compose up -d          # http://localhost:3031/  (web UI)
+```
+
+Open **http://localhost:3031/** for the Fuseki web UI (both datasets listed), and
+`http://localhost:3031/$/ping` for liveness.
+
 Two ready-made datasets:
-* **`/projects`** — TDB2 (persisted via `fuseki-data` volume); load the sample:
+* **`/projects`** — TDB2 (persisted via `fuseki-data` volume); load the sample
+  with the CLI or curl:
   ```bash
-  curl -s -X POST http://admin:edo-proto@localhost:3030/projects/data \
+  fuseki-proto load data/sample-project.ttl     # -> /projects (default graph)
+  # or:
+  curl -s -X POST http://admin:edo-proto@localhost:3031/projects/data \
        -H 'Content-Type: text/turtle' \
        --data-binary @data/sample-project.ttl
   ```
-* **`/shapes`** — in-memory read side served from `shapes/project-claim-shapes.ttl`.
-  Query it: `curl http://localhost:3030/shapes/query?query={...}`.
+* **`/shapes`** — in-memory read side. `fuseki-proto start` re-seeds it from
+  `shapes/project-claim-shapes.ttl` on every start (like the assembler alone, the
+  CLI keeps the read side in lock-step with file edits). Query it via the UI or
+  `curl http://localhost:3031/shapes/query?query={...}`.
+
+> **Web UI + admin endpoints available.** This prototype runs the Apache Jena
+> *Fuseki **Full*** distribution — the web UI at `http://localhost:3031/` and the
+> admin endpoints (`/$/ping`, `/$/server`, `/$/backup`) are enabled. The compose
+> `healthcheck` probes `/$/ping`. `fuseki-proto` `start`/`status`/`ping` probe a
+> data-service endpoint (`/<dataset>/query`) so the CLI also works unchanged;
+> interact via the data-service endpoints (`/projects/query`, `/projects/data`,
+> ...) the UI, or the CLI.
 
 ## Validate the claim
 
 The shapes are self-contained (they do not import external vocabularies), so
-the same file drives both the host-side `pyshacl` and the Fuseki `SHACL`
-protocol:
+SHACL validation is best done host-side with `pyshacl` against the same file
+(Fuseki Full also exposes a `/projects/shacl` validation endpoint, but `pyshacl`
+is the simplest route for the prototype):
 
 ```bash
 pyshacl -s shapes/project-claim-shapes.ttl \
@@ -58,15 +109,9 @@ pyshacl -s shapes/project-claim-shapes.ttl \
         -e shapes/project-claim-shapes.ttl
 ```
 
-Or, against the loaded Fuseki graph, use the Fuseki SHACL validation endpoint:
-
-```bash
-curl http://localhost:3030/projects/shacl \
-     -H 'Accept: text/turtle' \
-     -H 'Content-Type: text/turtle' \
-     --data "PREFIX p <http://www.w3.org/ns/shacl#> \
-             CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o FILTER(?s = p:ProjectShape) }"
-```
+`/shapes` is a convenience to browse the shape triples with SPARQL inside
+Fuseki; the authoritative constraint file remains `shapes/project-claim-shapes.ttl`
+and the authoritative validation is the `pyshacl` invocation above.
 
 ## What the claim shapes assert (spec §3.2)
 
