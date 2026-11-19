@@ -21,29 +21,38 @@ process):
 | `environment/pip-freeze.txt` | Full `pip freeze` of the repository `.venv` used for the run (Python 3.12.12, Darwin arm64; `linkml==1.11.1`, `linkml-runtime==1.11.1`, pinned for `linkml-map==0.5.2` per F8), with the interpreter/platform in the header; installable via `pip install -r`. Copied because the generating library and its dependencies are not referenceable from the repository. |
 | `environment/linkml-types.yaml` | The `linkml:types` module as resolved during the run — for the pinned versions it is the bundled `linkml_runtime/linkml_model/model/schema/types.yaml` of linkml-runtime 1.11.1, the resolution target of the source's `imports: linkml:types`. Copied because it lives inside the installed library. |
 
-**References** (files outside the crate, addressed by repository-relative
-paths from the crate root; they are *not* copied — they stay where they are
-maintained). Each entity in `ro-crate-metadata.json` states *how* the file has
-to do with the version:
+**Snapshot copies** (files copied from the repository into the crate so that
+the crate is a self-contained, validatable package — every data entity typed
+`File` must resolve inside the crate; each snapshot's `description` records
+the git blob of the copied file):
+
+| File (in `references/`) | Role |
+|---|---|
+| `05_P05_S05_madmp-schema.yaml` | LinkML maDMP schema — source-side sibling (CF1-007 family); its CV value sets are mirrored by the internal-format enums. |
+| `05_P05_S05_sms-schema.yaml` | LinkML SMS schema — source-side sibling; the Sensor/MeasuredProperty part is fed by the SMS device record it models. |
+| `patterns.md` | Transformation rules (P1–P42, S1–S16); compiled into the two LinkML Maps (commit `62f404b`). |
+| `dmp-to-internal.linkml-map.yaml` | LinkML Map DMP → internal (CF2-004); input to the schema reconciliation. |
+| `sms-to-internal.linkml-map.yaml` | LinkML Map SMS → internal (CF2-004); input to the schema reconciliation. |
+| `trip.py` | Hand-coded realisation (CF2-003) — the behavioural reference of the reconciliation. |
+| `agnostic_trip.py` | Map-driven realisation (CF2-004) consuming the schema together with the maps. |
+
+**References** (documents left outside the crate as `CreativeWork` entities —
+nova-crate flags only `File`-typed data entities against the crate contents,
+and these markdown documents stay where they are maintained):
 
 - `../../internal-format/04_P04_S04_internal-format-spec.md` — specification
   v0.2 (CF1-006) the format is derived from.
-- `../05_P05_S05_madmp-schema.yaml`, `../05_P05_S05_sms-schema.yaml` —
-  source-side sibling schemas (CF1-007 family); their CV value sets are
-  mirrored by the internal-format enums.
-- `../trafos/patterns.md`, `../trafos/dmp-to-internal.linkml-map.yaml`,
-  `../trafos/sms-to-internal.linkml-map.yaml` — transformation rules and the
-  LinkML Maps compiled from them (CF2-004); inputs to the schema
-  reconciliation.
-- `../fuseki-proto/tool/src/fuseki_proto/trip.py` — hand-coded realisation
-  (CF2-003) that is the behavioural reference of the reconciliation.
-- `../fuseki-proto/tool/src/fuseki_proto/agnostic_trip.py` — map-driven
-  realisation consuming the schema together with the maps.
 - `../trafos/README.md` — documentation of the reconciliation (§9) and the
   findings catalogue with F11 (§13).
 - `../../../../05_Cards/CF1-006.md`, `CF1-007.md`, `CF2-003.md`,
   `CF2-004.md` — cards in which the format, the schemas, the realisations and
   the finding were decided and logged.
+
+> Trade-off: the `references/` snapshots freeze the files at the crate date
+> (their git blobs are recorded in the metadata for traceability). If a
+> referenced file changes, either refresh the snapshot or treat this crate as
+> the provenance record of that historical state — it documents the version,
+> not the moving target.
 
 ## How the version came about (graph summary)
 
@@ -101,10 +110,19 @@ Version identity for reproducibility:
   `instrument`/`startTime`/`endTime`) plus PROV terms (`wasGeneratedBy`,
   `wasDerivedFrom`) and `dcterms:requires` via the additional `prov` and
   `dcterms` context entries.
-- External files are referenced with repository-relative paths although
-  RO-Crate 1.1 prescribes absolute URLs for external entities — a pragmatic
-  deviation kept deliberately so the crate stays resolvable inside the
-  repository checkout.
+- License: the Root Data Entity links via `license` to the contextual entity
+  `https://spdx.org/licenses/MIT` (RO-Crate 1.1 root requirements: license
+  SHOULD link to a contextual entity with name and description). The crate is
+  under the same MIT License as the EDO repository (repository-root `LICENSE`,
+  Copyright (c) 2026 Mohamed Anis Koubaa).
+- External documents (spec, trafos README, cards) are referenced with
+  repository-relative `@id`s as `CreativeWork` entities (not data entities);
+  every `File`-typed data entity, by contrast, physically resides in the
+  crate so that RO-Crate validators (e.g. nova-crate,
+  `spec-v1.1/dataEntityFileError`) pass when the whole crate directory is
+  validated. Note: validating `ro-crate-metadata.json` in isolation (e.g.
+  pasting it into a web form) cannot resolve any in-crate file — always
+  validate the directory.
 - The copies are snapshots; if the schema changes again, either refresh this
   crate or create a new one per version (one crate per version keeps the
   provenance history explicit).
