@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+# docker-compose.override.yml — merge layers on top of docker-compose.yml
+#
+# Docker Compose automatically loads this file (same directory) on top of the
+# base compose file whenever you run `docker compose up`. Its only job here is
+# to expose the protagonist Fuseki on a NON-conflicting host port.
+#
+# Background: the host already runs a root-launchd Jena Fuseki for the ORKG
+# database on port 3030 (see fuseki-proto/tool/README.md / `fuseki-proto
+# status`). To avoid a port clash with that service, the prototype's host-side
+# binding is remapped to 3031 -> container 3030.
+#
+# Use the matching CLI default (fuseki-proto --port defaults to 3031) so the
+# tool talks to the prototype, not the unrelated /orkg instance.
+#
+# ---------------------------------------------------------------------------
+services:
+  fuseki:
+    ports:
+      # The base compose file declares NO host publish (so it never fights the
+      # host /orkg Fuseki on 3030). This single line is the only host binding:
+      # host 3031 -> container 3030 (unchanged internal port).
+      - "3031:3030"
