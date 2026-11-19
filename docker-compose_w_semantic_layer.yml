@@ -56,6 +56,31 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
 
+  # socket-ux — ontology-aware socket presenting the API for the vue-frontend:
+  # projects & values from the internal graph database (Fuseki) and on-demand
+  # RO-Crate generation for NovaCrate.
+  socket-ux:
+    build:
+      context: ./components/socket-ux
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - schema-registry
+    ports:
+      - "8090:8090"
+    volumes:
+      # Mount the ontology so the socket is 'ontology-aware' at runtime
+      - ./schema/ontology:/app/ontology:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      ONTOLOGY_PATH: "/app/ontology/regimo.ttl"
+      FUSEKI_URL: "http://host.docker.internal:3031"
+      FUSEKI_DATASET: "projects"
+      FUSEKI_USER: "admin"
+      FUSEKI_PASSWORD: "edo-proto"
+
 networks:
   default:
     name: regimo-network
