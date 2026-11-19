@@ -191,13 +191,13 @@ Result of run `20261119-173927`:
 
 | # | Finding | Status |
 |---|---|---|
-| F1 | `edo:ProjectShape` demands ≥1 `edo:hasContact` (`sh:minCount 1`), but the maDMP export carries no `contact`; faithful P6 behaviour (omit) → SHACL violation. **Decision needed:** relax the shape (contact optional) vs. guarantee a contact in the RDMO export vs. derive contact from a contributor. | Open — the single remaining SHACL violation |
+| F1 | `edo:ProjectShape` demands ≥1 `edo:hasContact` (`sh:minCount 1`), but the maDMP export carries no `contact`; faithful P6 behaviour (omit) → SHACL violation. **Decision needed:** relax the shape (contact optional) vs. guarantee a contact in the RDMO export vs. derive contact from a contributor. | Open — tracked in card **[[CF2-007]]** (decision 2027-04-30) |
 | F2 | `foaf:PersonShape` types `foaf:mbox` as `xsd:anyURI`; an IRI has no datatype, a plain literal has `xsd:string` — both violate. Correct encoding: `mailto:…` as an `xsd:anyURI` **typed literal** (now in `trip.py`). `data/sample-project.ttl` had the same defect and was corrected on 2026-11-19 (now conforms). | Resolved (sample + trip.py) |
 | F3 | Title rule: catalogue P1 maps `project/title`; spec §4's example carries the DMP-document title instead. `trip.py` follows the catalogue; harmonise spec §4 / catalogue wording. | Resolved 2026-11-19: spec §4 example + `sample-project.ttl` now use the project title "Measurement_02" and note the `dmp/title` distinction; P1 annotated in the catalogue. |
 | F4 | Namespace inconsistency: `data/sample-project.ttl` uses `sosa:` = `http://www.w3.org/ns/sosa#`, spec §3.1 and the shapes use `…/sosa/`. `trip.py` follows spec/shapes. | Resolved 2026-11-19: `sample-project.ttl` `sosa:` → `http://www.w3.org/ns/sosa/` (matches spec §3.1, shapes, trip.py). |
 | F5 | `dcat:format` encoding: spec §4 shows plain strings ("text/csv"), `sample-project.ttl` and `trip.py` emit `http://purl.org/NET/mediatypes/…` IRIs. | Resolved 2026-11-19: spec §4 Example + §3.3 document the Media-Type-IRI representation (`http://purl.org/NET/mediatypes/<type>`); catalogue P34 harmonised. |
 | F6 | maDMP JSON types `pid_system` as a plain string ("doi"), not a list — `trip.py` normalises both. Also `project/title` ("Measurement_02") vs `dmp/title` ("maDMP for Measurement_02") differ in this export. | Handled in code |
-| F7 | Only device property 159 is available as a file; device 67 references properties 157–161. Export the remaining property files to cover the full sensor. | Open (data) |
+| F7 | Only device property 159 is available as a file; device 67 references properties 157–161. Export the remaining property files to cover the full sensor. | Open — tracked in card **[[CF1-010]]** (2027-02-05) |
 
 ## 7. Related artefacts
 

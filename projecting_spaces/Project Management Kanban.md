@@ -23,6 +23,7 @@ kanban-plugin: board
 - [ ] [[CF1-002]] Implement the [[Databus]] within Pigeon / [[Search subject]] function
 - [ ] [[CF1-008]] 06a ● maDMP Kostenabbildung (Group 5, 18 `project/costs/**`) @{2027-01-08}
 - [ ] [[CF1-009]] 06b ● maDMP Restabbildung (Group 6, ~49 answered-but-unmapped values) @{2027-01-22}
+- [ ] [[CF1-010]] F7 ● SMS Device-Properties vollständig exportieren (157–161) @{2027-02-05}
 
 
 ## CF2 — Present Information in Suitable Form
@@ -35,6 +36,7 @@ kanban-plugin: board
 - [ ] [[CF2-004]] 07 ● LinkML Map für Transformation ins interne Format @{2027-03-19}
 - [ ] [[CF2-005]] 08 ● Verknüpfung DMP & SMS @{2027-04-02}
 - [ ] [[CF2-006]] 09 ● Generierung RO Crate aus internem Format @{2027-04-16}
+- [ ] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-04-30}
 
 
 ## CF3 — Easy Metadata Editing
