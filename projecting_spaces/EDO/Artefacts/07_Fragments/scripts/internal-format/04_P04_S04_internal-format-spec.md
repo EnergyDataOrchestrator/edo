@@ -113,9 +113,19 @@ Contribution, Kostenzuordnung).
 | currency | ISO-4217 | (Liste im Mapping) |
 | Measured quantities, units, equipment types, sampling media, compartments, aggregation types | **SMS CV** (`smscv:`) — URIs unverändert übernommen | z.B. Air temperature `.../measuredquantities/4/`, °C `.../units/51/` |
 | Rolle (Contribution) | **RDA maDMP contributor-type CV** (DataCite contributor types; CRediT als spätere Verfeinerung möglich) — Entscheidung 2026-11-19 | `Contact Person`, `Data Collector`, `Data Curator`, `Data Manager`, `Distributor`, `Editor`, `Hosting Institution`, `Producer`, `Project Leader`, `Project Member`, `Project Manager`, `Related Person`, `Researcher`, `Research Group`, `Rights Holder`, `Sponsor`, `Supervisor`, `Work Package Leader`, `Other` |
-| Formats (`dcat:format`) | **IANA Media Types** — Entscheidung 2026-11-19 | `text/csv`, `application/json`, … (Freitext „CSV“ wird in der Transformation CF2-003 per Mapping-Tabelle übersetzt) |
+| Formats (`dcat:format`) | **IANA Media Types** — Entscheidung 2026-11-19; als **IRI** repräsentiert (``http://purl.org/NET/mediatypes/<type>``, z.B. ``http://purl.org/NET/mediatypes/text/csv``) — F5 | `text/csv`, `application/json`, … (Freitext „CSV“ wird in der Transformation CF2-003 per Mapping-Tabelle übersetzt) |
 
 ## 4. Beispiel-Instanz (Weatherstation-Szenario, DMP + SMS)
+
+> **Harmonisiert 2026-11-19 (F3/F5):** Die example in `json` folgt der
+> Realisation (Catalogue P1; `trip.py`/`agnostic_trip.py`) und nicht dem
+> DMP-Dokumententitel: `dcterms:title` trägt die **Project** title
+> (`project/title` = „Measurement_02“), **nicht** den DMP-Dokumententitel
+> (`dmp/title` = „maDMP for Measurement_02“ — eine separate, in CF2-003 nicht
+> abgebildete Ebene). Ebenso ist `dcat:format` als **IRI** (Media-Type-IRI
+> `http://purl.org/NET/mediatypes/<type>`) dargestellt, nicht als
+> Freitext-Zeichenkette (vgl. §3.3 und F5).
+>
 
 ```json
 {
@@ -130,7 +140,7 @@ Contribution, Kostenzuordnung).
   },
   "@id": "urn:uuid:<uuid5 rdmo:project:6>",
   "@type": "edo:Project",
-  "dcterms:title": "maDMP for Measurement_02",
+  "dcterms:title": "Measurement_02",
   "dcterms:language": "eng",
   "time:hasInterval": { "begin": "2026-07-01", "end": "2026-09-11" },
   "edo:hasContact": {
@@ -158,7 +168,7 @@ Contribution, Kostenzuordnung).
         "dcterms:title": "Storage during the project",
         "dcat:accessURL": "https://gitlab.kit.edu/kit/iai/it4edm/metadb",
         "edo:dataAccess": "open",
-        "dcat:format": ["text/csv"] },
+        "dcat:format": ["http://purl.org/NET/mediatypes/text/csv"] },
       { "@type": "dcat:Distribution",
         "dcterms:title": "Preservation after the project",
         "edo:dataAccess": "open",

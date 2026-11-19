@@ -66,6 +66,10 @@ right-most columns:
 | # | Source (maDMP) | Target (internal) | Pattern (Category) | 1:1? | Missing → |
 |---|---|---|---|---|---|
 | P1 | `project/title` | Project `dcterms:title` | `direct-property-mapping` (Property-Level) | 1:1 | default (maDMP title template) |
+>
+> **F3:** `dcterms:title` wird aus `project/title` gespeist **nicht** aus dem
+> DMP-Dokumententitel (`dmp/title`). Die Spezifikation §4 Example ist
+> entsprechend harmonisiert (2026-11-19).
 | P2 | `project/description` | Project `dcterms:description` | `direct-property-mapping` (Property-Level) | 1:1 | null (optional) |
 | P3 | `language` | Project `dcterms:language` | `direct-property-mapping` (Property-Level) | 1:1 (CV) | omit → fall back to `eng` |
 | P4 | `project/start`, `project/end` | Project `time:hasInterval` → **Interval** node (`begin`/`end`) | `nesting` (Structural) + `direct-property-mapping` per date | cast (→date) | null (interval optional) |
@@ -131,17 +135,18 @@ right-most columns:
 | P31 | during/after `title` (fixed constants) | Distribution `dcterms:title` | `default-injection` (fixed value, Structural) | fixed | always present |
 | P32 | during `access_url` | Distribution `dcat:accessURL` | `direct-property-mapping` (Property-Level) | 1:1 (URI) | null (optional) |
 | P33 | `data_access` (during: option CV; after: **derived** open⇔during-open else closed) | Distribution `edo:dataAccess` | `direct-property-mapping` (during) + `literal-transformation` (after: value derivation, Property-Level) | 1:1 (during) / derive (after) | default (`closed` when derivation ambiguous) |
-| P34 | `format[]` | Distribution `dcat:format[]` | `direct-property-mapping` (CV/IANA translation of free text later — CF2-003) | translate (CV → IANA, later) | omit |
+| P34 | `format[]` | Distribution `dcat:format[]` (Media-Type-**IRI**, §3.3/F5) | `direct-property-mapping` + `literal-transformation` (Freitext → IANA-Media-Type-IRI `http://purl.org/NET/mediatypes/<type>`; substring-basiert wie F10/CF2-004) | translate (CV → IANA-IRI) | omit |
 | P35 | after `certified_with` | Distribution `edo:certifiedWith[]` | `direct-property-mapping` (CV, Property-Level) | 1:1 (CV) | omit (none certified) |
 | P36 | after `pid_system` | Distribution `edo:pidSystem[]` | `direct-property-mapping` (CV, Property-Level) | 1:1 (CV) | omit |
 | P37 | after `host` (repository title) | Distribution `edo:hostedBy` → **Host** node | `nesting` + `direct-property-mapping` (title) | 1:1 | omit (host optional) |
 | P38 | after `license_ref` (option CV) | Distribution `edo:license` → **License** node | `nesting` + `direct-property-mapping` (value-conditional via license options) | translate (option CV) | omit (not licensed) |
 | P39 | after `license_start_date` | License `time:hasBeginning` | `literal-transformation` (date, Property-Level) | cast (→date) | omit |
 
-> **Lost (Distribution):** exact `format` free-text labels are dropped where the
-> IANA media-type translation is not yet implemented (P34); the internally-vs-
-> externally-accessible distinction carried by the during/after `data_access`
-> derivation (P33) is a simplification of the RDMO source options.
+> **Lost (Distribution):** the exact `format` free-text *label* (e.g. „CSV“) is
+> dropped — P34 maps it to the Media-Type-**IRI** only (substring-based, F10),
+> not to both; the internally-vs- externally-accessible distinction carried by
+> the during/after `data_access` derivation (P33) is a simplification of the
+> RDMO source options.
 
 ### Host class
 
