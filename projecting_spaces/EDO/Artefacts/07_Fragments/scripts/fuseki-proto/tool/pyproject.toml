@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.1",
+    "rocrate>=0.16.0",  # CF2-006 RO-Crate generation from the internal format
 ]
 license = { text = "MIT" }
 

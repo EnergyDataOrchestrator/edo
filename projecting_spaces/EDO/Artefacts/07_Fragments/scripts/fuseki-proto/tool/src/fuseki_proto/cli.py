@@ -18,6 +18,7 @@ from . import docker as D
 from .docker import DEFAULT_BACKUPS_DIR, TOOL_DIR
 from .trip import trip as trip_cmd
 from .agnostic_trip import agnostic_trip as agnostic_trip_cmd
+from .ro_crate import crate_group as crate_cmd
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
@@ -92,6 +93,10 @@ cli.add_command(trip_cmd)
 # of the transformation logic), see agnostic_trip.py and
 # scripts/trafos/README.md.
 cli.add_command(agnostic_trip_cmd)
+
+# CF2-006 RO-Crate generation from the internal format (see ro_crate.py,
+# scripts/ro_crate documentation).
+cli.add_command(crate_cmd)
 
 
 # ---------------------------------------------------------------------------

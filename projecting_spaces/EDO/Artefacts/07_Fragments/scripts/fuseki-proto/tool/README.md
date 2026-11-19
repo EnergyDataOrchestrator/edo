@@ -48,6 +48,9 @@ fuseki-proto agnostic-trip transform   # same scenarios, logic from the LinkML M
 fuseki-proto agnostic-trip store       # (default: latest agnostic-trip artifacts)
 fuseki-proto agnostic-trip verify      # replay graph urn:edo:agnostic-trip:replay
 fuseki-proto agnostic-trip run         # artifacts in ../data/agnostic-trip/<ts>/
+
+# CF2-006 RO-Crate generation from the internal format (see ../ro_crate.py docs)
+fuseki-proto crate generate            # linked internal format -> RO-Crate directory
 ```
 
 The prototype runs **Fuseki Full**, so the web UI is on `http://localhost:3031/`
@@ -103,3 +106,23 @@ Dependencies: `linkml-map` (pinned 0.5.x — the specification language is the
 The agnostic graph is isomorphic to the `trip` graph modulo 4 documented
 `rdf:type` triples (the serialiser types every class node; CF2-004 §11 of
 `trafos/README.md`).
+
+## The `crate` command (CF2-006)
+
+`ro_crate.py` (module `fuseki_proto.ro_crate`) generates a self-contained
+RO-Crate 1.1 from the **internal format** — the linked DMP+SMS pivot graph. The
+generator uses the **`rocrate`** library (`ro-crate-py`, pinned 0.16.0) to build
+and serialise the crate, so the metadata is spec-conformant by construction; only
+the internal-format field extraction reads the compact JSON-LD directly.
+
+```bash
+fuseki-proto crate generate            # default input: the CF2-005 linked instance
+fuseki-proto crate generate --input <internal-format.jsonld>
+fuseki-proto crate generate --out <crate-dir>
+```
+
+The output directory contains `ro-crate-metadata.json`, the packaged graph as a
+`File` data entity (`data/project-graph.jsonld`), `README.md`, and
+`validation-report.json` (the generator's structural self-check). Dependency:
+`rocrate>=0.16.0`. To fully validate a crate against the RO-Crate 1.1 spec, load
+the whole directory into an RO-Crate validator (e.g. the nova-crate editor).
