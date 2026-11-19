@@ -121,12 +121,15 @@ right-most columns:
 | P27 | `preservation_statement` (joined `value_list`) | Dataset `edo:preservationStatement` | `direct-property-mapping` (join, Property-Level) | join (multi-value → string) | omit |
 | P28 | `security_and_privacy` | (*no target in v0.2 — carried as free text / later*) | — | n/a (lost) | n/a |
 | P29 | `distribution` (during + after) | Dataset `dcat:distribution` → **Distribution** nodes × 2 | `nesting` (Structural) | n/a (structural) | default (two distributions always emitted) |
-| P30 | dataset↔sensor (today only `PIDINST:` free text in `description`) | Dataset `prov:wasGeneratedBy` → **Sensor** | `existence-conditional` (guard on present PID) / future — gap #18 | derive (extract PID) | omit (today lost; gap #18) |
+| P30 | dataset↔sensor (today only `PIDINST:` free text in `description`) | Dataset `prov:wasGeneratedBy` → **Sensor** | `existence-conditional` (guard on present PID) / future — gap #18 | derive (extract PID) | **provisioned on EDO level / manual (CF2-005)** — machine-readable PID (gap #18) would make it map-able |
 
 > **Lost (Dataset):** `security_and_privacy` has no v0.2 target (P28, carried as
 > free text / future spec revision); the machine-readable dataset↔sensor link is
-> not yet captured — today only a `PIDINST:` free-text fragment in `description`
-> survives (P30, gap #18).
+> not yet transformed from the source documents — today only a `PIDINST:`
+> free-text fragment in `description` survives (P30, gap #18). The link is
+> **provisioned on the EDO level / manually** per the CF2-005 decision (reference
+> `Dataset prov:wasGeneratedBy Sensor`, join key = sensor PID; see
+> `../internal-format/linkage-strategy.md` + `linked-instance.example.json`).
 
 ### Distribution class
 
@@ -215,13 +218,15 @@ on the EDO level:
 | N3 | sampling interval "PT15M" | SamplingPlan `edo:samplingInterval` | `default-injection` (manual) — `existence-conditional` once routed via RDMO/ELN (gap #16) | n/a (human) | manual — `existence-conditional` later (gap #16) |
 | N4 | `sampling_interval_source` (manual / ELN / catalog) | SamplingPlan `edo:samplingIntervalSource` | `default-injection` (provenance marker, interim) | fixed | `manual` (default marker) |
 | N5 | sampling media (SMS-CV URI reuse) | SamplingPlan `edo:samplingMedia` | `direct-property-mapping` (reuse SMS-CV, derived alongside #16) | 1:1 (URI) | manual |
-| N6 | dataset↔sensor link | Dataset `prov:wasGeneratedBy` → Sensor / MeasurementSeries | future `reification` or direct link — gap #18 (today free text) | n/a | `existence-conditional` later (gap #18) |
+| N6 | dataset↔sensor link | Dataset `prov:wasGeneratedBy` → Sensor / MeasurementSeries | future `reification` or direct link — gap #18 (today free text); decision (CF2-005): **reference** unless-listed | n/a | `existence-conditional` later (gap #18); provisioned on EDO level / manual today (CF2-005) |
 
 > **Lost / manual (R4):** these target classes have no machine-readable source, so
 > the values are provisioned **manually on the EDO level** (`default-injection`)
 > rather than transformed. The dataset↔sensor link (N6) is not representable
 > today (gap #18) and would move from a manual link to a concrete pattern once a
-> catalog/ELN source exists.
+> catalog/ELN source exists. Linkage **decision** made in CF2-005: reference
+> (`Dataset prov:wasGeneratedBy Sensor`), join key = sensor PID; see
+> `../internal-format/linkage-strategy.md` + `linked-instance.example.json`.
 
 ## Notes
 

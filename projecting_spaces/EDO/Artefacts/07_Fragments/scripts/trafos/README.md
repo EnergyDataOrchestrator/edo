@@ -400,7 +400,7 @@ not fail the run (same policy as CF2-003).
 | F9 | `str()` in a restricted `expr` distributes over lists (linkml-map `_distributing`), so substring tests over list-valued slots must join first — the maps use `(' '.join(format or [])).lower()` / `(' / '.join(role or [''])).lower()` instead of `str(format)`. | Compiled into the maps |
 | F10 | P34 as a substring test over the joined labels refines trip.py's regex word boundaries (`\bcsv\b`) — equivalent on this data, to be kept in mind for free-text formats like "scsv". Same for P8. | Documented in the maps |
 | F11 | The internal-format schema edits (§9) make the generated JSON Schema stale; regenerate before the next JSON-Schema consumer. | Closed 2026-11-19: regenerated with linkml 1.11.1; provenance in the RO-Crate `../linkml/05_P05_S05_internal-format-json-schema-crate/`. |
-| F12 | P30 (dataset↔sensor link, gap #18) and S6/P18 subject minting stay outside the maps — a future spec revision with machine-readable links should move them into the map (target schema slots) as well. | Open (spec) |
+| F12 | P30 (dataset↔sensor link, gap #18) and S6/P18 subject minting stay outside the maps — a future spec revision with machine-readable links should move them into the map (target schema slots) as well. | **P30 linkage decision made (CF2-005, 2026-11-19):** link lives in the internal format as reference (`Dataset prov:wasGeneratedBy Sensor`, `Sensor sosa:observes MeasuredProperty`), join key = sensor PID; strategy + exemplified instance in `../internal-format/linkage-strategy.md` / `linked-instance.example.json`. Becomes map-able once the DMP carries the PID machine-readably (CF2-001/002). **S6/P18 subject minting:** still Open (spec). |
 
 ## 14. Related artefacts (CF2-004)
 
