@@ -51,7 +51,7 @@ classes:
       status_uri:
         range: uriorcurie
       website:
-        range: Any
+        range: uriorcurie
       is_public:
         range: boolean
       is_private:

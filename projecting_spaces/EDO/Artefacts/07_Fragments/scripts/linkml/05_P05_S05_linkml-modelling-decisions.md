@@ -33,7 +33,7 @@ Entscheidungen:
 
 ## 4. Slot-spezifische Entscheidungen
 
-- **`Person.name` / `Person.mbox`**: eigene Slots mit `foaf:name`/`foaf:mbox`-Mappings (`mbox` als `Any`, `mailto:`-URI empfohlen). Lektion: LinkML **verwirft Slot-Referenzen still**, wenn sie nicht als Top-Level-Slots definiert sind — SchemaView läuft durch, erst `jsonschemagen` bricht mit `ValueError: No such slot …` ab. Gleiches traf `Host.url` (Mapping `edo:url`, Range `uriorcurie`, laut Spec §3.2) — nachgetragen.
+- **`Person.name` / `Person.mbox`**: eigene Slots mit `foaf:name`/`foaf:mbox`-Mappings (`mbox` als `uriorcurie`, `mailto:`-URI). Lektion: LinkML **verwirft Slot-Referenzen still**, wenn sie nicht als Top-Level-Slots definiert sind — SchemaView läuft durch, erst `jsonschemagen` bricht mit `ValueError: No such slot …` ab. Gleiches traf `Host.url` (Mapping `edo:url`, Range `uriorcurie`, laut Spec §3.2) — nachgetragen.
 - **`accuracy`**: bleibt Freitext (`"±0.3 K @ 25 °C"`). Die SMS-API liefert `null`; autoritativ ist das FS6002-Datenblatt (CF1-005). Strukturierte Form (Min/Max/Bedingung) erst mit CF2-003 entscheiden.
 - **`resolution`**: `double` (0.1 K aus dem Datenblatt).
 - **`sampling_interval`**: ISO-8601-Duration als String mit Regex-Pattern (`PT15M` für das Weatherstation-Szenario). Kein eigener Datentyp, damit CF2-003 frei bleibt.
@@ -48,6 +48,15 @@ Entscheidungen:
 - Validierung: `SchemaView` über alle drei Schemas; Klassen-/Slot-/Enum-Zahlen oben sind die Regressions-Baseline.
 - LinkML ist als Wegwerf-Installation unter `/tmp/linkmllib` (nicht in einem Projekt-Venv); falls weg: `.venv/bin/python3 -m pip install --quiet --target /tmp/linkmllib linkml`.
 - YAML-Fallstrick (2× aufgetreten): Plain Scalars dürfen **kein `: `** enthalten (`mailto: URI`, `CF1-005: taken`) — Beschreibungen ggf. quoten oder umformulieren.
+- Range-Fallstrick: `range: Any` ist ohne eigene `Any`-Klasse kein gültiger Range — `erdiagramgen`/`dotgen` brechen mit „unrecognized range (Any)“ ab, während `jsonschemagen` stillschweigend durchläuft. URI-artige Felder (`mbox`, `access_url`, `license_ref`, `url`, `website`) stehen deshalb auf `uriorcurie` (entspricht Spec §3.2, xsd:anyURI).
+
+### 5.1 Grafische Repräsentation
+
+- **Mermaid-ER-Diagramm** (rendert nativ in Obsidian, im Mermaid-Block einbetten):
+  `PYTHONPATH=/tmp/linkmllib .venv/bin/python3 -m linkml.generators.erdiagramgen <schema>.yaml > <schema>-erd.mmd`
+  → `05_P05_S05_{madmp,sms,internal-format}-erd.mmd` (je 1 Diagramm, Klassen + Kardinalitäten).
+- Pro-Klassen-Mermaid-Dateien: `python -m linkml.generators.mermaidclassdiagramgen -d <outdir> <schema>.yaml`.
+- Graphviz (veraltet, aber funktionsfähig; rendert **direkt** via `dot`, schreibt nichts auf stdout, hängt Format-Endung an): `python -m linkml.generators.dotgen <schema>.yaml -o <name> -f dot` → `<name>.dot` + `dot -Tsvg <name>.dot -o <name>.svg`.
 
 ## 6. Offene Punkte (bewusst nicht in CF1-007)
 

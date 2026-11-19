@@ -186,7 +186,7 @@ slots:
   mbox:
     mappings:
       - foaf:mbox
-    range: Any
+    range: uriorcurie
     description: "Email address of a person (mailto: URI recommended)."
   description:
     mappings:
@@ -296,7 +296,7 @@ slots:
   access_url:
     mappings:
       - dcat:accessURL
-    range: Any
+    range: uriorcurie
   data_access:
     range: DataAccessEnum
   format:
@@ -324,7 +324,7 @@ slots:
   license_uri:
     mappings:
       - dcterms:license
-    range: Any
+    range: uriorcurie
   license_start_date:
     range: date
 

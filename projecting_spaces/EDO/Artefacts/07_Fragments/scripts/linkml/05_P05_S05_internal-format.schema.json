@@ -223,7 +223,12 @@
             "additionalProperties": false,
             "description": "Storage during / preservation after the project (two per dataset).",
             "properties": {
-                "access_url": {},
+                "access_url": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "certified_with": {
                     "items": {
                         "$ref": "#/$defs/CertificationEnum"
@@ -384,7 +389,12 @@
                         "null"
                     ]
                 },
-                "license_uri": {}
+                "license_uri": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
             },
             "title": "License",
             "type": "object"
@@ -522,7 +532,11 @@
                     ]
                 },
                 "mbox": {
-                    "description": "Email address of a person (mailto: URI recommended)."
+                    "description": "Email address of a person (mailto: URI recommended).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "name": {
                     "type": "string"

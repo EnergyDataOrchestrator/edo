@@ -77,7 +77,7 @@ classes:
         range: string
         required: true
       mbox:
-        range: Any
+        range: uriorcurie
       contact_id:
         range: Identifier
         inlined: true
@@ -89,7 +89,7 @@ classes:
         range: string
         required: true
       mbox:
-        range: Any
+        range: uriorcurie
       contributor_id:
         range: Identifier
         inlined: true
@@ -169,7 +169,7 @@ classes:
       title:
         range: string
       access_url:
-        range: Any
+        range: uriorcurie
       data_access:
         range: DataAccessEnum
       format:
@@ -185,7 +185,7 @@ classes:
         range: Host
         inlined: true
       license_ref:
-        range: Any
+        range: uriorcurie
       license_start_date:
         range: date
 
@@ -195,7 +195,7 @@ classes:
       title:
         range: string
       url:
-        range: Any
+        range: uriorcurie
 
   SecurityAndPrivacy:
     description: maDMP `dmp/dataset/security_and_privacy` — one entry per answered question.
