@@ -48,3 +48,4 @@ projecting_spaces/.obsidian/workspace.json
 # We only ignore potential build artifacts inside them if necessary.
 # However, it is better to manage those within each submodule's own .gitignore.
 *.egg-info/
+components/utils/models-kit.json
