@@ -19,6 +19,7 @@ vue-frontend ──HTTP──> socket-ux ──SPARQL──> Fuseki /projects (i
 | `GET /api/v1/projects` | Projects and their key values (title, description, datasets, contact) for the drawer list |
 | `GET /api/v1/projects/{pid}/values` | Full internal-format document (compact JSON-LD) of one project |
 | `GET /api/v1/projects/{pid}/crate` | RO-Crate metadata JSON for one project, ready for NovaCrate |
+| `GET /api/v1/events` | SSE stream of databus project events (live refresh of the drawer) |
 
 `{pid}` is the URL-encoded project IRI from the internal database, e.g.
 `urn%3Auuid%3Ad9e575a1-...`.
@@ -37,6 +38,25 @@ vue-frontend ──HTTP──> socket-ux ──SPARQL──> Fuseki /projects (i
   `KAFKA_BOOTSTRAP_SERVERS` is unset or the broker is unreachable, events are
   logged and the API keeps working (the user never notices the databus, per
   the frontend design decision — the bus is only visible in Settings).
+
+### Live project events (CF1)
+
+`regimo-core` publishes one semantic event per project change on the
+`edo.projects.v1` topic. When `KAFKA_BOOTSTRAP_SERVERS` is set, socket-ux
+runs a background consumer (`events.py`) that fans those events out through
+`GET /api/v1/events` as **server-sent events**:
+
+```
+regimo-core ──Kafka edo.projects.v1──> socket-ux ──SSE──> vue-frontend
+```
+
+Project events (`project.created` / `project.updated` / `project.removed`)
+are forwarded as `event: projects-changed` with the original payload as JSON
+data — the frontend drawer simply refetches the project list on each one.
+Other bus events keep their action as the event name. A `: keep-alive`
+comment every 15 s keeps idle connections open. Without a configured broker
+the endpoint still works (it just never emits project events), keeping the
+socket usable before and without the databus.
 
 ### RO-Crate on demand
 

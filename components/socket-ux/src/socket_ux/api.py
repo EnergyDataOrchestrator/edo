@@ -6,22 +6,28 @@ The API the vue-frontend talks to:
 * ``GET /api/v1/projects``             — projects and their key values (Fuseki)
 * ``GET /api/v1/projects/{pid}/values`` — full internal-format document
 * ``GET /api/v1/projects/{pid}/crate``  — RO-Crate metadata for NovaCrate
+* ``GET /api/v1/events``               — SSE stream of databus project events
 
 ``pid`` is the URL-encoded project IRI from the internal database.
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
+import json
 import logging
+from contextlib import asynccontextmanager
 from typing import Any, Annotated
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from . import crate as crate_mod
 from . import fuseki
 from .bus import CRATE_TOPIC, SOCKET_ID, BusPublisher, MessageHeader, ontology_uri_from_path
 from .config import get_settings
+from .events import BusEvent, EventBus, subscriber_from_settings
 from .internal_format import project_doc
 
 logger = logging.getLogger(__name__)
@@ -31,6 +37,32 @@ app = FastAPI(title="socket-ux", version="0.1.0", description=(
 ))
 
 _publisher: BusPublisher | None = None
+_broker = EventBus()
+_subscriber = None  # BusSubscriber | None, started in the lifespan below
+
+
+def broker() -> EventBus:
+    """The in-process event broker feeding the SSE endpoint."""
+    return _broker
+
+
+@asynccontextmanager
+async def _lifespan(_: FastAPI):
+    global _subscriber
+    settings = get_settings()
+    _broker.attach_loop(asyncio.get_running_loop())
+    _subscriber = subscriber_from_settings(_broker, settings.kafka_bootstrap_servers)
+    if _subscriber is not None:
+        _subscriber.start()
+    try:
+        yield
+    finally:
+        if _subscriber is not None:
+            _subscriber.stop()
+            _subscriber = None
+
+
+app.router.lifespan_context = _lifespan
 
 
 def publisher() -> BusPublisher:
@@ -111,6 +143,11 @@ def project_crate(pid: str) -> JSONResponse:
     crate = crate_mod.build_crate(doc, pid)
     metadata = crate_mod.crate_metadata_json(crate)
 
+    _broker.publish(BusEvent(
+        topic="local.crate.v1",
+        payload={"event": "crate.served", "project": pid},
+        headers={"socket_id": SOCKET_ID},
+    ))
     publisher().publish(
         CRATE_TOPIC,
         {"project": pid, "crate_root": metadata.get("@graph", [{}])[0].get("@id", "./")},
@@ -123,3 +160,54 @@ def project_crate(pid: str) -> JSONResponse:
         ),
     )
     return JSONResponse(content=metadata)
+
+
+# -- server-sent events (CF1): project changes reach the front end live ------
+
+SSE_KEEPALIVE_S = 15.0
+
+
+def format_sse(event: BusEvent) -> str:
+    """One bus event as an SSE message.
+
+    Project events from regimo-core become ``event: projects-changed`` (the
+    front end refetches the list); anything else keeps its action as the
+    event name.
+    """
+    action = event.action or "bus.message"
+    data = json.dumps(event.payload, ensure_ascii=False)
+    name = "projects-changed" if action.startswith("project.") else action
+    return f"event: {name}\ndata: {data}\n\n"
+
+
+@app.get("/api/v1/events")
+async def events(request: Request) -> StreamingResponse:
+    """SSE stream of databus events (``edo.projects.v1`` via regimo-core).
+
+    Emits ``event: projects-changed`` with the event payload as JSON data so
+    the front end can refetch the project list; a keep-alive comment keeps
+    proxies from closing idle connections.
+    """
+
+    async def stream():
+        queue = _broker.subscribe()
+        try:
+            yield "retry: 3000\n\n"
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(
+                        queue.get(), timeout=SSE_KEEPALIVE_S)
+                except asyncio.TimeoutError:
+                    yield ": keep-alive\n\n"
+                    continue
+                yield format_sse(event)
+        finally:
+            _broker.unsubscribe(queue)
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
