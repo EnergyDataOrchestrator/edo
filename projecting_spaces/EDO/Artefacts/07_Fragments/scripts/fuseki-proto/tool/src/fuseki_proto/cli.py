@@ -16,6 +16,7 @@ import click
 
 from . import docker as D
 from .docker import DEFAULT_BACKUPS_DIR, TOOL_DIR
+from .trip import trip as trip_cmd
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
@@ -80,6 +81,11 @@ def cli(ctx, compose_dir, service, dataset, port, user, password, backups_dir):
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
     pass
+
+
+# CF2-003 round trip (transform -> store -> verify), see trip.py and
+# scripts/trafos/README.md.
+cli.add_command(trip_cmd)
 
 
 # ---------------------------------------------------------------------------
