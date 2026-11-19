@@ -90,17 +90,17 @@ class_derivations:
     description: "Root derivation: maDMP `dmp` (+ `dmp/project`) -> edo:Project. NB: the project title/description come from dmp/project, not from the maDMP-level `title` (catalogue decision, finding F3 of CF2-003)."
     slot_derivations:
       title:
-        description: "P1: project/title -> dcterms:title (NOT the maDMP-level dmp/title)."
-        expr: project[0].title
+        description: "P1: project/title -> dcterms:title (NOT the maDMP-level dmp/title — finding F3). Partial maDMPs without a dmp/project array (other RDMO catalogs) fall back to the maDMP-level title so the Project node stays addressable."
+        expr: project and project[0].title or title
       description:
-        description: "P2: project/description -> dcterms:description (1:1)."
-        expr: project[0].description
+        description: "P2: project/description -> dcterms:description (1:1); absent project -> omitted."
+        expr: project and project[0].description or None
       language:
         description: "P3: dmp/language, absent in this export -> default 'eng' (omit → default)."
         expr: language or "eng"
       interval:
-        description: "P4: project/start,end -> time:hasInterval Interval node (dates cast to xsd:date by the serialiser)."
-        expr: "{'interval_begin': project[0].start, 'interval_end': project[0].end}"
+        description: "P4: project/start,end -> time:hasInterval Interval node (dates cast to xsd:date by the serialiser); absent project -> omitted."
+        expr: "project and {'interval_begin': project[0].start, 'interval_end': project[0].end} or None"
       dmp_id:
         description: "P5/P16/P17: dmp_id -> edo:dmpId Identifier node (see Identifier derivation)."
         populated_from: dmp_id

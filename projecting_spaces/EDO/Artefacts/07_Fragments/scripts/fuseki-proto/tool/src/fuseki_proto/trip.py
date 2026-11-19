@@ -595,11 +595,14 @@ def _build_checks(b: Builder, dmp: dict, device: dict | None,
                   properties: list[dict]) -> None:
     """Field-level checks comparing the (dumped) graph against the sources."""
     d = dmp["dmp"]
-    proj = d["project"][0]
+    proj_list = d.get("project") or []
+    proj = proj_list[0] if proj_list else {}
     dmp_id = d["dmp_id"]["identifier"]
 
     P = "edo:Project"
-    p_title = proj["title"]
+    # F3: project/title is canonical; partial maDMPs without a dmp/project
+    # array fall back to the maDMP-level title (matches the map fallback).
+    p_title = proj.get("title") or d.get("title")
 
     def proj_pat(rest: str) -> str:
         return f"?p a {P} . {rest}"
@@ -611,10 +614,11 @@ def _build_checks(b: Builder, dmp: dict, device: dict | None,
                 proj_pat(f'?p dcterms:description {sparql_str(proj["description"])}'))
     b.check("C03", "P3", "DMP language (absent -> default)", 'dcterms:language "eng"',
             proj_pat('?p dcterms:language "eng"'))
-    b.check("C04", "P4", "DMP project start/end", f"interval {proj.get('start')}…{proj.get('end')}",
-            proj_pat(f'?p time:hasInterval ?i . ?i time:hasBeginning ?b . '
-                     f'?i time:hasEnd ?e . FILTER(STR(?b) = "{proj.get("start")}") . '
-                     f'FILTER(STR(?e) = "{proj.get("end")}")'))
+    if proj:
+        b.check("C04", "P4", "DMP project start/end", f"interval {proj.get('start')}…{proj.get('end')}",
+                proj_pat(f'?p time:hasInterval ?i . ?i time:hasBeginning ?b . '
+                         f'?i time:hasEnd ?e . FILTER(STR(?b) = "{proj.get("start")}") . '
+                         f'FILTER(STR(?e) = "{proj.get("end")}")'))
     b.check("C05", "P5/P16/P17", "DMP dmp_id",
             f"dmpId {dmp_id!r} typed {d['dmp_id']['type']!r}",
             proj_pat(f'?p edo:dmpId ?id . ?id dcterms:identifier '
@@ -684,13 +688,16 @@ def _build_checks(b: Builder, dmp: dict, device: dict | None,
         dists = ds.get("distribution", [])
         if dists:
             during = dists[0]
+            d_title = during.get("title", "Storage during the project")
+            # access_url is optional (P32); partial exports omit it
+            props = f'?x dcterms:title {sparql_str(d_title)}'
+            if during.get("access_url"):
+                props += f' ; dcat:accessURL <{during["access_url"]}>'
+            props += f' ; edo:dataAccess "{during.get("data_access", "closed")}"'
             b.check("C20", "P31/P32/P33", "DMP distribution (during)",
-                    f'title {during.get("title")!r}, accessURL {during.get("access_url")!r}, '
+                    f'title {d_title!r}, accessURL {during.get("access_url")!r}, '
                     f'dataAccess {during.get("data_access")!r}',
-                    f'?p dcat:dataset ?d . ?d dcat:distribution ?x . '
-                    f'?x dcterms:title {sparql_str(during.get("title", "Storage during the project"))} ; '
-                    f'dcat:accessURL <{during["access_url"]}> ; '
-                    f'edo:dataAccess "{during.get("data_access", "closed")}"')
+                    f'?p dcat:dataset ?d . ?d dcat:distribution ?x . {props}')
             formats = sorted({m for fmt in during.get("format", [])
                               for pat, m in FORMAT_TRANSLATION if pat.search(fmt)})
             if formats:
