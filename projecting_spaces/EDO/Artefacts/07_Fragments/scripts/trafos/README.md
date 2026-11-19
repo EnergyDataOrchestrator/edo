@@ -307,9 +307,16 @@ schema was reconciled to the realisation (each an explicit finding):
 | `format`: `string` → **`uriorcurie`** | F5 resolved in favour of media-type IRIs (`http://purl.org/NET/mediatypes/…`) |
 | `measuring_range_min/max`, `resolution`: `double` → **`decimal`** | trip.py emits `xsd:decimal` literals |
 
-> NB: the generated JSON Schema
-> `../linkml/05_P05_S05_internal-format.schema.json` was **not** regenerated
-> after these edits — run `gen-json-schema` when it is next needed.
+> NB (F11, closed 2026-11-19): the JSON Schema was regenerated after these
+> edits with `.venv/bin/gen-json-schema` (linkml **1.11.1**, pinned for
+> linkml-map 0.5.2 per F8). Deltas to the superseded linkml-1.12.0 version of
+> commit `09a25eb`: the reconciliation descriptions above, one generator
+> behaviour change (`data_access`: `anyOf`+`null` → direct `$ref`), and
+> `metamodel_version` 1.12.0 → 1.11.0. The provenance of this version (copies
+> of the two files, references to everything that shaped it, the generation
+> run as `CreateAction`) is documented in the RO-Crate
+> `../linkml/05_P05_S05_internal-format-json-schema-crate/` (see its
+> README.md).
 
 The same reconciliation applies **inside the DMP map** as
 `source_schema_patches` (so the map stays self-contained): F4 (`dmp/project`
@@ -387,7 +394,7 @@ not fail the run (same policy as CF2-003).
 | F8 | linkml-map 0.5.2's specification language is the *old* datamodel (class/slot/enum derivations with `populated_from`/`expr`); preconditions/class rules are not yet usable. Version-pinned: the maps are only guaranteed against 0.5.x. | Documented |
 | F9 | `str()` in a restricted `expr` distributes over lists (linkml-map `_distributing`), so substring tests over list-valued slots must join first — the maps use `(' '.join(format or [])).lower()` / `(' / '.join(role or [''])).lower()` instead of `str(format)`. | Compiled into the maps |
 | F10 | P34 as a substring test over the joined labels refines trip.py's regex word boundaries (`\bcsv\b`) — equivalent on this data, to be kept in mind for free-text formats like "scsv". Same for P8. | Documented in the maps |
-| F11 | The internal-format schema edits (§9) make the generated JSON Schema stale; regenerate before the next JSON-Schema consumer. | Open (tooling) |
+| F11 | The internal-format schema edits (§9) make the generated JSON Schema stale; regenerate before the next JSON-Schema consumer. | Closed 2026-11-19: regenerated with linkml 1.11.1; provenance in the RO-Crate `../linkml/05_P05_S05_internal-format-json-schema-crate/`. |
 | F12 | P30 (dataset↔sensor link, gap #18) and S6/P18 subject minting stay outside the maps — a future spec revision with machine-readable links should move them into the map (target schema slots) as well. | Open (spec) |
 
 ## 14. Related artefacts (CF2-004)
