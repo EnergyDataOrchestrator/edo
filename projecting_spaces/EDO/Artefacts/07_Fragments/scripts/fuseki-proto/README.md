@@ -38,7 +38,8 @@ fuseki-proto/
 │   └── backups/                  # created by `fuseki-proto backup` (git-ignored)
 └── tool/                         # src-layout Python CLI (`pip install -e tool`);
     └── src/fuseki_proto/         #   lifecycle + backup/restore/load/wipe + CF2-003
-                                  #   round trip (`trip.py`, see tool/README.md)
+                                  #   round trip (`trip.py`) and the CF2-004 map-driven
+                                  #   round trip (`agnostic_trip.py`, see tool/README.md)
 ```
 
 > **Port:** Docker Compose auto-loads `docker-compose.override.yml`, so the
@@ -137,4 +138,8 @@ and the authoritative validation is the `pyshacl` invocation above.
   are fixed by CF1-007 / CF2-004.
 * The CF2-003 transformation realisation lives in `../trafos/` (catalogue
   `patterns.md` + realisation `README.md`) and is executed by this tool's
-  `trip` command (`fuseki-proto trip run`) — see `tool/README.md`.
+  `trip` command (`fuseki-proto trip run`) — see `tool/README.md`. The CF2-004
+  **second way** (same transformation, logic in LinkML Map files) is executed
+  by `agnostic-trip` (`fuseki-proto agnostic-trip run`), writing to
+  `data/agnostic-trip/<timestamp>/`. Both share the `/projects` dataset; each
+  run wipes it first.

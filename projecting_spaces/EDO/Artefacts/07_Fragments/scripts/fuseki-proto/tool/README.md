@@ -42,6 +42,12 @@ fuseki-proto trip transform   # DMP + SMS -> internal-format graph (scenario 1)
 fuseki-proto trip store       # store it in /projects + SPARQL/SHACL check (scenario 2)
 fuseki-proto trip verify      # dump /projects, replay, field-level checks (scenario 3)
 fuseki-proto trip run         # all three stages, artifacts in ../data/trip/<ts>/
+
+# CF2-004 round trip, map-driven (see ../../trafos/README.md §8–§13)
+fuseki-proto agnostic-trip transform   # same scenarios, logic from the LinkML Maps
+fuseki-proto agnostic-trip store       # (default: latest agnostic-trip artifacts)
+fuseki-proto agnostic-trip verify      # replay graph urn:edo:agnostic-trip:replay
+fuseki-proto agnostic-trip run         # artifacts in ../data/agnostic-trip/<ts>/
 ```
 
 The prototype runs **Fuseki Full**, so the web UI is on `http://localhost:3031/`
@@ -69,3 +75,31 @@ Artifacts (`project-graph.ttl`, `roundtrip-dump.ttl`, `trip-report.json`) land
 in `../data/trip/<timestamp>/`; the exit code is 0 only if every round-trip
 check passes (the SHACL verdict is recorded in the report but does not fail the
 run). Full documentation: `../../trafos/README.md`.
+
+## The `agnostic-trip` command (CF2-004)
+
+`agnostic_trip.py` (module `fuseki_proto.agnostic_trip`) performs the **same
+round trip as `trip`**, but the transformation logic is **not** in the code: it
+lives in the two LinkML Map files
+`scripts/trafos/dmp-to-internal.linkml-map.yaml` (rules P1–P42) and
+`scripts/trafos/sms-to-internal.linkml-map.yaml` (rules S1–S16), which compile
+the `trafos/patterns.md` catalogue. The tool only wires the linkml-map
+`ObjectTransformer` (`--dmp-map` / `--sms-map` override the map files) and
+serialises the transformed objects into Turtle, driven entirely by the
+internal-format schema (`scripts/linkml/05_P05_S05_internal-format-schema.yaml`:
+slot `mappings` → predicates, ranges → datatyping, `class_uri` → node types).
+
+Stage and CLI shape are identical to `trip` (`transform` / `store` / `verify` /
+`run`, same connection options, same source overrides plus `--dmp-map/--sms-map`),
+with two differences:
+
+* artifacts land in `../data/agnostic-trip/<timestamp>/` and the report is
+  `agnostic-trip-report.json` (adds map files, linkml-map version, compiled
+  derivations, transformed objects);
+* the replay graph is `<urn:edo:agnostic-trip:replay>`.
+
+Dependencies: `linkml-map` (pinned 0.5.x — the specification language is the
+0.5 datamodel) and `linkml-runtime` in addition to `click`; `pyshacl` optional.
+The agnostic graph is isomorphic to the `trip` graph modulo 4 documented
+`rdf:type` triples (the serialiser types every class node; CF2-004 §11 of
+`trafos/README.md`).

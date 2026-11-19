@@ -1,25 +1,44 @@
-# trafos — CF2-003 Realisierung: Transformationen DMP & SMS → internes Format
+# trafos — CF2-003 & CF2-004 Realisierung: Transformationen DMP & SMS → internes Format
 
-This directory documents and drives the realisation of card **CF2-003**
-("Transformationen von DMP und SMS ins interne Format", fragment
-`[[06_Transformationen]]`).
+This directory documents and drives the realisation of cards **CF2-003**
+("Transformationen von DMP und SMS ins interne Format") and **CF2-004**
+("LinkML Map für Transformation ins interne Format", fragment
+`[[07_LinkML_Map]]`) — two ways of performing the same transformation:
 
-* `patterns.md` — the **transformation catalogue** (scenario 1 deliverable):
-  every transformation from the sources into the internal format, tagged with a
-  pattern identifier (P1–P42 for DMP, S1–S16 for SMS, N1–N6 for the new R4
-  classes).
+* **CF2-003 — the hand-coded way:** every rule of the catalogue is realised in
+  Python (`trip.py`). Sections 1–7 below.
+* **CF2-004 — the map-driven way:** the transformation logic lives in two
+  **LinkML Map** files (linkml-map TransformationSpecifications) compiled from
+  the same catalogue; the executing tool (`agnostic_trip.py`) only wires the
+  engine and serialises the result. Sections 8–13 below.
+
+* `patterns.md` — the **transformation catalogue** (scenario 1 deliverable of
+  CF2-003): every transformation from the sources into the internal format,
+  tagged with a pattern identifier (P1–P42 for DMP, S1–S16 for SMS, N1–N6 for
+  the new R4 classes).
+* `dmp-to-internal.linkml-map.yaml` / `sms-to-internal.linkml-map.yaml` — the
+  **LinkML Map files** (CF2-004 deliverable): the catalogue compiled into
+  linkml-map TransformationSpecifications; the single container of the
+  transformation logic in the second variant.
 * `README.md` (this file) — the **realisation documentation**: how the three
-  acceptance scenarios of CF2-003 were executed end-to-end on a concrete
-  instance, every concrete mapping decision, the verification results and the
+  acceptance scenarios were executed end-to-end on a concrete instance (both
+  variants), every concrete mapping decision, the verification results and the
   findings/open items that fell out of it.
-* The executing code lives in
-  `../fuseki-proto/tool/src/fuseki_proto/trip.py` (`fuseki-proto trip …`), the
-  storage backend is the Fuseki prototype `../fuseki-proto/` (README there).
+* The executing code lives in `../fuseki-proto/tool/src/fuseki_proto/`
+  (`trip.py` for CF2-003, `agnostic_trip.py` for CF2-004, run as
+  `fuseki-proto trip …` / `fuseki-proto agnostic-trip …`), the storage backend
+  is the Fuseki prototype `../fuseki-proto/` (README there).
 
-Status: **all three scenarios executed 2026-11-19, run
-`../fuseki-proto/data/trip/20261119-173927/`** — 41/41 round-trip checks passed,
-triple-count equality store↔replay OK, one SHACL violation remains by design
-(see *Findings*, F1).
+Status:
+
+* **CF2-003: all three scenarios executed 2026-11-19, run
+  `../fuseki-proto/data/trip/20261119-173927/`** — 41/41 round-trip checks
+  passed, triple-count equality store↔replay OK, one SHACL violation remains
+  by design (see *Findings*, F1).
+* **CF2-004: all three scenarios executed 2026-11-19, run
+  `../fuseki-proto/data/agnostic-trip/20261119-182411/`** — 41/41 checks,
+  82==82 triples, same SHACL verdict; the graph is **isomorphic** to the
+  CF2-003 trip graph modulo 4 documented `rdf:type` triples (§11).
 
 ---
 
@@ -48,25 +67,31 @@ triple-count equality store↔replay OK, one SHACL violation remains by design
 
 ```bash
 cd ../fuseki-proto/tool
-. .venv/bin/activate          # needs click; pyshacl optional (SHACL stage)
+. .venv/bin/activate          # needs click + linkml-map (CF2-004); pyshacl optional (SHACL stage)
 fuseki-proto start            # bring the prototype up (port 3031)
-fuseki-proto trip run         # transform -> store -> verify
-# or the individual stages:
-fuseki-proto trip transform   # scenario 1: catalogue -> internal-format graph
-fuseki-proto trip store       # scenario 2: load into /projects, SPARQL + SHACL
-fuseki-proto trip verify      # scenario 3: dump, replay, field-level checks
+fuseki-proto trip run         # CF2-003: transform -> store -> verify
+fuseki-proto agnostic-trip run  # CF2-004: the same scenarios, map-driven
+# or the individual stages (both commands have the same shape):
+fuseki-proto trip transform           # scenario 1: catalogue -> internal-format graph
+fuseki-proto trip store               # scenario 2: load into /projects, SPARQL + SHACL
+fuseki-proto trip verify              # scenario 3: dump, replay, field-level checks
+fuseki-proto agnostic-trip transform  # scenario 1 via the LinkML Maps
+fuseki-proto agnostic-trip store      # scenario 2 (default: latest agnostic-trip artifacts)
+fuseki-proto agnostic-trip verify     # scenario 3 (replay graph urn:edo:agnostic-trip:replay)
 ```
 
 Sources can be overridden (`--dmp`, `--sms-device`, `--sms-property`, repeatable
 for several device properties); connection via `--port/--user/--password/--dataset`.
 
-**Artifacts** per run in `../fuseki-proto/data/trip/<timestamp>/`:
+**Artifacts** per run in `../fuseki-proto/data/trip/<timestamp>/` (CF2-003) or
+`../fuseki-proto/data/agnostic-trip/<timestamp>/` (CF2-004):
 
 | File | Content |
 |---|---|
 | `project-graph.ttl` | the transformed internal-format instance graph (Turtle) |
 | `roundtrip-dump.ttl` | the Turtle dump Fuseki served back from `/projects` |
 | `trip-report.json` | inputs, applied rules, notes/losses, all 41 checks with per-graph results, store/verify summaries, SHACL report |
+| `agnostic-trip-report.json` | (CF2-004) the same stages/checks plus the map files, linkml-map version, the compiled derivations and the transformed objects as JSON |
 
 Exit code: `0` when all round-trip checks pass and the replay triple count
 equals the store's; `1` otherwise. The SHACL verdict is recorded in the report
@@ -182,3 +207,194 @@ Result of run `20261119-173927`:
 * Fuseki prototype: `../fuseki-proto/` (+ `tool/README.md` for the CLI,
   incl. the `trip` command)
 * Run artifacts: `../fuseki-proto/data/trip/<timestamp>/`
+
+---
+
+# CF2-004 — zweite Variante: LinkML-Map-getriebene Transformation (`agnostic-trip`)
+
+Card **CF2-004** (“LinkML Map für Transformation ins interne Format”) requires
+the **same transformation** as CF2-003 — same sources, same internal format,
+same store, same acceptance scenarios — but with the logic **not hand-coded**:
+two **LinkML Map** files (linkml-map TransformationSpecifications) compile the
+catalogue `patterns.md` and are the **container of the whole transformation
+logic**. The executing tool is *agnostic* with respect to the rules: it only
+wires the engine (linkml-map ObjectTransformer) and serialises the transformed
+objects into the internal-format graph, driven by the internal-format schema.
+
+Deliverables (all in place):
+
+| Deliverable | File |
+|---|---|
+| LinkML Map, DMP half (rules P1–P42) | `dmp-to-internal.linkml-map.yaml` (this directory) |
+| LinkML Map, SMS half (rules S1–S16) | `sms-to-internal.linkml-map.yaml` (this directory) |
+| Executing tool | `../fuseki-proto/tool/src/fuseki_proto/agnostic_trip.py` (`fuseki-proto agnostic-trip …`) |
+| Test results + validation report | run `../fuseki-proto/data/agnostic-trip/20261119-182411/` (+ §12) |
+
+Status: **realised and executed 2026-11-19** — 41/41 round-trip checks passed,
+triple-count equality 82==82, SHACL verdict identical to CF2-003 (one F1
+violation by design), and the emitted graph is **isomorphic to the CF2-003
+trip graph** modulo 4 documented `rdf:type` triples (§11).
+
+## 8. How the catalogue is compiled into the maps
+
+linkml-map 0.5.2 (pinned; the version used defines the specification language)
+executes a TransformationSpecification with the `ObjectTransformer`: each
+**class derivation** (`populated_from` = source class, keyed by target class)
+maps a source object into a target dict via **slot derivations** — either
+`populated_from` (direct field, recursing into nested class derivations by the
+source slot's range) or `expr` (a LinkML expression evaluated by the restricted
+evaluator: null-propagating operators, `case()`, schema-bound attribute access
+— `.strip()`, `.join()`, `.lower()` work on resolved slot values). Enum-typed
+source slots require one matching **enum derivation** per source enum (the
+two maps use pass-through `mirror_source` derivations). Reconciliation of
+export-JSON deviations against the source schema happens inside the map via
+`source_schema_patches` (F4, F5 — see below), so each map file is fully
+self-contained.
+
+Rule → derivation index (the map files document every slot derivation with its
+rule reference in the `description`):
+
+| patterns.md rule | Derivation / mechanism in the map |
+|---|---|
+| P1/P2 | `Project.title` / `.description`, `expr: project[0].title|description` (project title, NOT the DMP-document title — F3; needs the F4 patch) |
+| P3 | `Project.language`, `expr: language or "eng"` (omit → default) |
+| P4 | `Project.interval`, `expr` dict literal `{interval_begin, interval_end}` → Interval node |
+| P5/P16/P17 | `Project.dmp_id` → shared `Identifier` derivation (`identifier_value`/`identifier_type`) |
+| P6/P10/P11 | `Project.has_contact`, `populated_from: contact` (absent → omitted → F1) |
+| P7/P8 | `Project.has_contribution` → `Contribution.role`, `expr` case over the joined roles (`responsible for preservation|metadata` → `Data Curator`, else `Other`) — compiles the ROLE_TRANSLATION table |
+| P10/P11 | `Contribution.agent`, `expr` dict `{name, 'mailto:' + mbox}` (null-propagating; absent mbox → key dropped) |
+| P9 | `Project.has_cost`, `populated_from: cost` (absent → omitted) |
+| P18 | `Dataset.identifier` ← `dataset_id` (Identifier derivation); the Dataset IRI is minted by the serialiser |
+| P19–P22 | `Dataset.title/description/issued/dataset_type`, `populated_from` |
+| P23 | `Dataset.keyword`, `populated_from` (array passthrough) |
+| P24/P25 | `Dataset.personal_data/sensitive_data`, `expr` `case((… == "yes", True), (… == "no", False), (True, False))` |
+| P26/P27 | `Dataset.quality_assurance` ← `data_quality_assurance` (split), `.preservation_statement` |
+| P28 | **deliberately NOT derived** — no v0.2 target class (documented loss) |
+| P29–P33 | `Dataset.has_distribution` → `Distribution.title/access_url/data_access` (data_access via DataAccessEnum mirror) |
+| P34 | `Distribution.format`, `expr`: list of six `case` entries compiling the FORMAT_TRANSLATION table (case-insensitive substring over the joined labels; no match → `None`, dropped by the serialiser; "CSV and JSON" → both media types) |
+| P35/P36 | `Distribution.certified_with/pid_system`, `populated_from` (CertificationEnum / IdentifierTypeEnum mirror; the string "doi" is coerced to a list by the engine) |
+| P37/P40 | `Distribution.hosted_by` → `Host.title/url` |
+| P38/P39/P41/P42 | `Distribution.license` → `License.license_uri/license_start_date` (needs the F5 patch introducing `LicenseRef`) |
+| P30 | **not derivable as a slot derivation** — dataset↔sensor link via PIDINST free text remains a code-level concern (gap #18) |
+| S1 | `Sensor.title`, `expr: short_name or long_name or device_type_name` |
+| S2/S4 | `Sensor.model` / `.sensor_type`, `populated_from` |
+| S3 | `Sensor.manufacturer`, `expr: manufacturer_name.strip() if manufacturer_name else None` (whitespace normalisation) |
+| S5 | `Sensor.identifier`, `expr` dict `{identifier_value: persistent_identifier, identifier_type: 'handle'}` |
+| S6 | **not in the map** — the serialiser mints the device IRI from the JSON:API `data/id` |
+| S7–S9 | `MeasuredProperty.measured_quantity/measured_quantity_name/unit`, `populated_from` |
+| S10–S12 | `MeasuredProperty.measuring_range_min/max`, `.accuracy`, `.resolution`, `expr` `case` over `property_uri` — compiles the DATASHEET_OVERRIDES table (`…measuredquantities/4/` → −40.0 / 80.0 / "±0.3 K …" / 0.1) |
+| S13–S15 | `MeasuredProperty.sampling_media/compartment/aggregation_type`, `populated_from` |
+| S16 | `Sensor.observes`, `populated_from: device_properties` (assembled by the tool, see §10) |
+
+Both maps carry the four maDMP CVs (`IdentifierTypeEnum`, `DataAccessEnum`,
+`CertificationEnum`, `LanguageEnum`) as `mirror_source` pass-through enum
+derivations — linkml-map requires exactly one derivation per reachable source
+enum.
+
+## 9. Schema reconciliation (internal-format schema edits)
+
+Writing the maps against `05_P05_S05_internal-format-schema.yaml` surfaced
+places where the CF1-007 schema and the CF2-003 realisation diverged; the
+schema was reconciled to the realisation (each an explicit finding):
+
+| Edit | Rationale |
+|---|---|
+| prefix `smscv:` added | the schema references SMS-CV URIs but lacked the prefix |
+| `measured_quantity` → `smscv:measuredQuantity`, `sampling_media` → `smscv:samplingMedia`, `compartment` → `smscv:compartment` | align the mappings with trip.py (S7/S13/S14) |
+| `measured_quantity_name` → `dcterms:title` | S8 |
+| `license_start_date` → `time:hasBeginning` | P39/P42 |
+| `interval_end`: `time:hasEnding` → **`time:hasEnd`** | trip.py + SHACL `IntervalShape` use `time:hasEnd` |
+| `format`: `string` → **`uriorcurie`** | F5 resolved in favour of media-type IRIs (`http://purl.org/NET/mediatypes/…`) |
+| `measuring_range_min/max`, `resolution`: `double` → **`decimal`** | trip.py emits `xsd:decimal` literals |
+
+> NB: the generated JSON Schema
+> `../linkml/05_P05_S05_internal-format.schema.json` was **not** regenerated
+> after these edits — run `gen-json-schema` when it is next needed.
+
+The same reconciliation applies **inside the DMP map** as
+`source_schema_patches` (so the map stays self-contained): F4 (`dmp/project`
+as a single-element list → `multivalued`) and F5 (`license` as an array of
+`{license_ref, start_date}` objects → multivalued `LicenseRef` reference + new
+`LicenseRef` class).
+
+## 10. Engine-level adaptations (agnostic_trip.py)
+
+Three things cannot be expressed in a map and live in the tool (documented in
+its docstring):
+
+1. **JSON:API unwrapping** — SMS records are enveloped (`data/attributes`);
+   attributes are filtered to the slots the SMS schema knows and the separately
+   fetched device-property records are assembled under `device_properties`
+   before `map_object` runs (the map then addresses them via normal slot
+   derivations).
+2. **IRI minting from context** — the Sensor IRI
+   `https://sms.atmohub.kit.edu/devices/<data.id>` (S6) comes from the
+   JSON:API envelope, not from the attributes the map sees; the Dataset IRI
+   `<dmp_id>/dataset:<urlquoted identifier_value>` (P18) is minted from the
+   transformed Identifier during serialisation.
+3. **Schema-driven serialiser** — walks each transformed object against the
+   internal-format SchemaView: predicate = first slot `mappings` entry (else
+   `<default_prefix>:<lowerCamel(slot)>`), datatyping = slot range (`date` →
+   `xsd:date`, `decimal` → `xsd:decimal`, `boolean` → plain `true/false`,
+   `uriorcurie` → IRI, `foaf:mbox` → `"…"^^xsd:anyURI` per F2), node types =
+   class `class_uri`; `None` values, `None` list items (P34's non-matches) and
+   content-free nodes are skipped. Subject strategy: Project ←
+   `dmp_id.identifier_value`, Dataset ← minted IRI, Sensor ← context IRI,
+   everything else blank nodes.
+
+The transformer runs with `unrestricted_eval=True`, so the asteval fallback is
+available for future rules; all current rules evaluate in the restricted
+LinkML evaluator.
+
+## 11. Equivalence with the CF2-003 way (the second way proves the first)
+
+The two variants must produce the same data. Verified with rdflib against the
+CF2-003 run artifact `data/trip/20261119-173927/project-graph.ttl`:
+
+* All IRI/literal (blank-node-free) triples are **identical** between the two
+  graphs.
+* After removing the 4 nested `rdf:type` triples (see below), the graphs are
+  **isomorphic** (rdflib `isomorphic`, blank-node structure included).
+* The difference: the agnostic serialiser emits `rdf:type` for **every** class
+  node, while trip.py omitted it for the Interval and the three Identifier
+  blank nodes. The agnostic graph therefore holds **82 vs. 78 triples**, all
+  four extra triples are `a time:Interval` / `a edo:Identifier` on blank
+  nodes. Both encodings are faithful; the SHACL shapes don't target these
+  classes directly, so the verdict is unaffected.
+
+## 12. Executing the three scenarios (CF2-004 run)
+
+```text
+fuseki-proto agnostic-trip run
+  # transform: map-driven, project urn:uuid:d9e575a1-…, sensor …/devices/67
+  # store:     82 triples loaded into /projects, retrievable via SPARQL
+  #            SHACL: does NOT conform — exactly 1 violation (F1, hasContact)
+  # verify:    dump 6307 bytes -> replay <urn:edo:agnostic-trip:replay>
+  #            Round-trip checks: 41/41 passed
+  #            Triple-count equality default vs. replay: OK (82 vs. 82)
+```
+
+Run `20261119-182411`, artifacts `data/agnostic-trip/20261119-182411/`:
+`project-graph.ttl`, `roundtrip-dump.ttl`, `agnostic-trip-report.json` (map
+files, linkml-map 0.5.2, compiled derivations, transformed objects, stages,
+41 checks, SHACL report). Exit code 0; the SHACL verdict is recorded but does
+not fail the run (same policy as CF2-003).
+
+## 13. CF2-004 findings & open items
+
+| # | Finding | Status |
+|---|---|---|
+| F8 | linkml-map 0.5.2's specification language is the *old* datamodel (class/slot/enum derivations with `populated_from`/`expr`); preconditions/class rules are not yet usable. Version-pinned: the maps are only guaranteed against 0.5.x. | Documented |
+| F9 | `str()` in a restricted `expr` distributes over lists (linkml-map `_distributing`), so substring tests over list-valued slots must join first — the maps use `(' '.join(format or [])).lower()` / `(' / '.join(role or [''])).lower()` instead of `str(format)`. | Compiled into the maps |
+| F10 | P34 as a substring test over the joined labels refines trip.py's regex word boundaries (`\bcsv\b`) — equivalent on this data, to be kept in mind for free-text formats like "scsv". Same for P8. | Documented in the maps |
+| F11 | The internal-format schema edits (§9) make the generated JSON Schema stale; regenerate before the next JSON-Schema consumer. | Open (tooling) |
+| F12 | P30 (dataset↔sensor link, gap #18) and S6/P18 subject minting stay outside the maps — a future spec revision with machine-readable links should move them into the map (target schema slots) as well. | Open (spec) |
+
+## 14. Related artefacts (CF2-004)
+
+* Card: `../../05_Cards/CF2-004.md` (activity log documents the runs)
+* LinkML Maps: `dmp-to-internal.linkml-map.yaml`, `sms-to-internal.linkml-map.yaml` (this directory)
+* Executing tool: `../fuseki-proto/tool/src/fuseki_proto/agnostic_trip.py` + `tool/README.md` (`agnostic-trip` command)
+* Internal-format schema: `../linkml/05_P05_S05_internal-format-schema.yaml` (reconciled, §9)
+* Run artifacts: `../fuseki-proto/data/agnostic-trip/<timestamp>/`
+* CF2-003 counterpart: sections 1–7 above (same catalogue, hand-coded)
