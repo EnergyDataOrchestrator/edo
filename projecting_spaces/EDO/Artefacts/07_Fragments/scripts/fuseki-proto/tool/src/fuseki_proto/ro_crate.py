@@ -30,9 +30,15 @@ from __future__ import annotations
 import datetime as _dt
 import json
 from pathlib import Path
+from typing import cast
 
 import click
 from rocrate.rocrate import ROCrate
+
+# rocrate ships no type stubs — import its entity model so the checker can
+# resolve `.id`, `__setitem__` and `append_to` on the objects we build.
+from rocrate.model.entity import Entity
+from rocrate.model.file import File
 
 from . import docker as D
 
@@ -170,17 +176,17 @@ def _build(doc: dict, src: Path, out: Path) -> ROCrate:
     # license -> contextual CreativeWork entity (RO-Crate 1.1 root requirement:
     # license SHOULD link to a contextual entity with name and description)
     if license_uri:
-        lic = crate.add_jsonld({
+        lic = cast(Entity, crate.add_jsonld({
             "@id": license_uri,
             "@type": "CreativeWork",
             "name": _license_name(license_uri),
             "description": f"License of the packaged dataset ({license_uri}).",
-        })
+        }))
         root["license"] = {"@id": lic.id}
 
     # the packaged internal-format graph as a File data entity
     data_id = "data/project-graph.jsonld"
-    graph_file = crate.add_file(
+    graph_file = cast(File, crate.add_file(
         src,
         data_id,
         properties={
@@ -193,10 +199,10 @@ def _build(doc: dict, src: Path, out: Path) -> ROCrate:
                 "MeasuredProperty[]."
             ),
         },
-    )
+    ))
 
     # provenance: CreateAction linking the source instance -> packaged file
-    action = crate.add_jsonld({
+    action = cast(Entity, crate.add_jsonld({
         "@id": "#generate-action",
         "@type": "CreateAction",
         "name": "internal-format -> RO-Crate generation (CF2-006)",
@@ -210,27 +216,27 @@ def _build(doc: dict, src: Path, out: Path) -> ROCrate:
         "instrument": {
             "@id": "https://github.com/researchobject/ro-crate-py",
         },
-    })
+    }))
     graph_file["prov:wasGeneratedBy"] = {"@id": action.id}
 
     # contextual: the sensor (DMP-SMS link) + its measured properties
     if sensor_id or sensor_title:
-        sensor_ent = crate.add_jsonld({
+        sensor_ent = cast(Entity, crate.add_jsonld({
             "@id": sensor_id or "https://sms.atmohub.kit.edu/devices/67",
             "@type": f"{SOSA}Sensor",
             "name": sensor_title or "Sensor",
             "identifier": sensor_pid or sensor_id,
-        })
+        }))
         root["prov:wasGeneratedBy"] = {"@id": sensor_ent.id}  # CF2-005 link
         for i, p_ in enumerate(props, start=1):
             q = _expand_uri(_text(_val(p_, "smscv:measuredQuantity")))
             qname = _first_text(p_, "dcterms:title") or q
             prop_id = q or f"#measured-property-{i}"
-            prop_ent = crate.add_jsonld({
+            prop_ent = cast(Entity, crate.add_jsonld({
                 "@id": prop_id,
                 "@type": f"{SOSA}ObservableProperty",
                 "name": qname,
-            })
+            }))
             if q:
                 prop_ent["identifier"] = q
             sensor_ent.append_to("observes", {"@id": prop_id})
@@ -238,11 +244,11 @@ def _build(doc: dict, src: Path, out: Path) -> ROCrate:
 
     # contextual: contact
     if contact_name:
-        contact_ent = crate.add_jsonld({
+        contact_ent = cast(Entity, crate.add_jsonld({
             "@id": "#contact",
             "@type": "Person",
             "name": contact_name,
-        })
+        }))
         root["creator"] = {"@id": contact_ent.id}
 
     return crate
