@@ -52,18 +52,34 @@ SMS-Eintrag sollte korrigiert werden; bis dahin gilt für EDO:
 
 ## Weiterführende Eigenschaften des Geräts (Device-Properties 157–161)
 
-| ID | Property | Einheit | Messbereich (SMS) |
-|---|---|---|---|
-| 157 | Wind speed | m/s | 0.0 … 75.0 |
-| 158 | Wind direction | ° | 0.0 … 360.0 |
-| 159 | **Air temperature** | °C | −80.0 … 60.0 ⚠️ |
-| 160 | Relative humidity | % | 0.0 … 100.0 |
-| 161 | Atmospheric pressure | hPa | 500.0 … 1200.0 |
+| ID | Property | Einheit | Messbereich (SMS) | Messgröße (CV) | Aggregation |
+|---|---|---|---|---|---|
+| 157 | Wind speed | m/s | 0.0 … 75.0 | `.../measuredquantities/172/` | Average |
+| 158 | Wind direction | ° | 0.0 … 360.0 | `.../measuredquantities/170/` | Circular maximum distribution |
+| 159 | **Air temperature** | °C | −80.0 … 60.0 ⚠️ | `.../measuredquantities/4/` | Average |
+| 160 | Relative humidity | % | 0.0 … 100.0 | `.../measuredquantities/124/` | Average |
+| 161 | Atmospheric pressure | hPa | 500.0 … 1200.0 | `.../measuredquantities/3/` | Average |
+
+### Aggregation/Resolution-Hinweise (2026-11-19, Export F7)
+
+- **158 (Wind direction):** Aggregationstyp `Circular maximum distribution` (`.../aggregationtypes/8/`) — kein arithmetisches Mittel.
+- **161 (Atmospheric pressure):** einziges Property mit **Resolution** `0.1 hPa` (`.../units/57/`); alle übrigen `null`.
+- Alle fünf Properties referenzieren Kompartiment `Atmosphere` (`.../compartments/1/`) und Sampling-Media `Air` (`.../samplingmedia/9/`).
 
 ## Maschinenlesbare Repräsentation
 
 - `device-67.json` — vollständiger SMS-API-Datensatz des Geräts (JSON:API)
-- `device-67-property-159-air-temperature.json` — SMS-API-Datensatz der Messgröße Lufttemperatur
+- `device-67-property-157-wind-speed.json` — Wind Speed (m/s)
+- `device-67-property-158-wind-direction.json` — Wind Direction (°)
+- `device-67-property-159-air-temperature.json` — Air Temperature (°C)
+- `device-67-property-160-relative-humidity.json` — Relative Humidity (%)
+- `device-67-property-161-atmospheric-pressure.json` — Atmospheric Pressure (hPa)
+
+> Alle fünf Device-Property-Dateien (157–161) sind seit 2026-11-19 (F7) exportiert;
+> die Schnittmenge mit den in `device-67.json` referenzierten `device_properties`-ids
+> ist vollständig (verifiziert). Damit ist die **maschinenlesbare Sensorabdeckung des
+> FS6002 vollständig** im SMS-Originalformat. Nur Air Temperature (159) trägt die
+> Datenblatt-Autorität (Messbereich −40 … +80 °C, siehe Diskrepans oben).
 
 Diese Dateien sind die „formale SMS-Beschreibung“ im Originalformat des SMS.
 

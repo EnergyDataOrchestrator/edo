@@ -23,7 +23,6 @@ kanban-plugin: board
 - [ ] [[CF1-002]] Implement the [[Databus]] within Pigeon / [[Search subject]] function
 - [ ] [[CF1-008]] 06a ● maDMP Kostenabbildung (Group 5, 18 `project/costs/**`) @{2027-01-08}
 - [ ] [[CF1-009]] 06b ● maDMP Restabbildung (Group 6, ~49 answered-but-unmapped values) @{2027-01-22}
-- [ ] [[CF1-010]] F7 ● SMS Device-Properties vollständig exportieren (157–161) @{2027-02-05}
 
 
 ## CF2 — Present Information in Suitable Form
@@ -64,6 +63,7 @@ kanban-plugin: board
 - [x] [[CF1-003]] 01 ● Definition low level Beispiel (Messreihe) @{2026-11-20} @{2026-11-19}
 - [x] [[CF1-005]] 03 ● SMS Beschreibung @{2026-12-11} @{2026-11-19}
 - [x] [[CF1-006]] 04 ● Internes Format Beschreibung @{2026-12-18} @{2026-11-19}
+- [x] [[CF1-010]] F7 ● SMS Device-Properties vollständig exportieren (157–161) @{2027-02-05} @{2026-11-19}
 - [x] [[CF1-007]] 05 ● LinkML Beschreibung (DMP, SMS, internes Format) @{2027-01-15} @{2026-11-19}
 
 

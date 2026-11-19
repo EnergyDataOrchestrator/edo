@@ -197,7 +197,7 @@ Result of run `20261119-173927`:
 | F4 | Namespace inconsistency: `data/sample-project.ttl` uses `sosa:` = `http://www.w3.org/ns/sosa#`, spec §3.1 and the shapes use `…/sosa/`. `trip.py` follows spec/shapes. | Resolved 2026-11-19: `sample-project.ttl` `sosa:` → `http://www.w3.org/ns/sosa/` (matches spec §3.1, shapes, trip.py). |
 | F5 | `dcat:format` encoding: spec §4 shows plain strings ("text/csv"), `sample-project.ttl` and `trip.py` emit `http://purl.org/NET/mediatypes/…` IRIs. | Resolved 2026-11-19: spec §4 Example + §3.3 document the Media-Type-IRI representation (`http://purl.org/NET/mediatypes/<type>`); catalogue P34 harmonised. |
 | F6 | maDMP JSON types `pid_system` as a plain string ("doi"), not a list — `trip.py` normalises both. Also `project/title` ("Measurement_02") vs `dmp/title` ("maDMP for Measurement_02") differ in this export. | Handled in code |
-| F7 | Only device property 159 is available as a file; device 67 references properties 157–161. Export the remaining property files to cover the full sensor. | Open — tracked in card **[[CF1-010]]** (2027-02-05) |
+| F7 | Only device property 159 is available as a file; device 67 references properties 157–161. Export the remaining property files to cover the full sensor. | Resolved 2026-11-19 (CF1-010): all five `device-67-property-{157..161}-*.json` exported (wind speed/direction, air temperature, rel. humidity, atm. pressure) under `scripts/sms/`; coverage of `device-67.json` ids verified. |
 
 ## 7. Related artefacts
 
