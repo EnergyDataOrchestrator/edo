@@ -316,7 +316,12 @@ schema was reconciled to the realisation (each an explicit finding):
 > of the two files, references to everything that shaped it, the generation
 > run as `CreateAction`) is documented in the RO-Crate
 > `../linkml/05_P05_S05_internal-format-json-schema-crate/` (see its
-> README.md).
+> README.md). The crate is self-sufficient for the generation step: it
+> contains `reproduce.sh`, the pinned environment (`environment/pip-freeze.txt`,
+> linkml 1.11.1 / linkml-runtime 1.11.1) and the `linkml:types` module resolved
+> during the run (`environment/linkml-types.yaml`); re-running the generation
+> from the crate contents reproduced the archived JSON Schema byte-identically
+> (verified 2026-11-19).
 
 The same reconciliation applies **inside the DMP map** as
 `source_schema_patches` (so the map stays self-contained): F4 (`dmp/project`
