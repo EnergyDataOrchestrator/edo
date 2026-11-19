@@ -16,6 +16,7 @@ prefixes:
   prov: http://www.w3.org/ns/prov#
   time: http://www.w3.org/2006/time#
   sosa: http://www.w3.org/ns/sosa/
+  smscv: https://sms-cv.helmholtz.cloud/sms/cv/api/v1/
   xsd: http://www.w3.org/2001/XMLSchema#
 default_prefix: edo
 default_range: string
@@ -208,8 +209,9 @@ slots:
     range: date
   interval_end:
     mappings:
-      - time:hasEnding
+      - time:hasEnd
     range: date
+    description: "Reconciled in CF2-004: time:hasEnd (not time:hasEnding), matching the realisation in CF2-003 (trip.py) and the SHACL IntervalShape."
 
   dmp_id:
     range: Identifier
@@ -302,9 +304,9 @@ slots:
   format:
     mappings:
       - dcat:format
-    range: string
+    range: uriorcurie
     multivalued: true
-    description: IANA media type (e.g. text/csv); RDMO free text is translated in CF2-003.
+    description: "Reconciled in CF2-004: IANA media type as IRI (http://purl.org/NET/mediatypes/<type>), matching the realisation in CF2-003 (trip.py, P34). RDMO free text is translated into these IRIs by the transformation."
   certified_with:
     range: CertificationEnum
     multivalued: true
@@ -326,7 +328,10 @@ slots:
       - dcterms:license
     range: uriorcurie
   license_start_date:
+    mappings:
+      - time:hasBeginning
     range: date
+    description: "Reconciled in CF2-004: license start date maps to time:hasBeginning, matching the realisation in CF2-003 (trip.py, P39/P42)."
 
   observes:
     mappings:
@@ -350,28 +355,37 @@ slots:
     range: string
 
   measured_quantity:
+    mappings:
+      - smscv:measuredQuantity
     range: uriorcurie
-    description: SMS CV measured-quantity URI (e.g. smscv:measuredquantities/4/).
+    description: "SMS CV measured-quantity URI (e.g. smscv:measuredquantities/4/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S7)."
   measured_quantity_name:
+    mappings:
+      - dcterms:title
     range: string
+    description: "Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S8)."
   unit:
     range: uriorcurie
     description: SMS CV unit URI (e.g. smscv:units/51/).
   measuring_range_min:
-    range: double
+    range: decimal
   measuring_range_max:
-    range: double
+    range: decimal
   accuracy:
     range: string
     description: Free text in v0.2 ("±0.3 K @ 25 °C"); structured form decided with the CF2 transformations.
   resolution:
-    range: double
+    range: decimal
   sampling_media:
+    mappings:
+      - smscv:samplingMedia
     range: uriorcurie
-    description: SMS CV sampling-media URI (e.g. smscv:samplingmedia/9/).
+    description: "SMS CV sampling-media URI (e.g. smscv:samplingmedia/9/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S13)."
   compartment:
+    mappings:
+      - smscv:compartment
     range: uriorcurie
-    description: SMS CV compartment URI (e.g. smscv:compartments/1/).
+    description: "SMS CV compartment URI (e.g. smscv:compartments/1/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S14)."
   aggregation_type:
     range: uriorcurie
     description: SMS CV aggregation-type URI (e.g. smscv:aggregationtypes/1/).
