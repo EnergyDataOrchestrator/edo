@@ -34,6 +34,16 @@ CF2-006 precondition "the internal format contains linked DMP and SMS data".
 | `README.md` | Per-crate documentation. |
 | `validation-report.json` | The generator's structural self-check (5 checks: root dataset, root required properties, every `File` resolves in-crate, DMP-SMS link reflected, input preserved). |
 
+The generator **zips** the finished crate directory into `<crate-dir>.zip` (the
+zip's root is the crate directory, so it can be uploaded/extracted and
+validated as-is by nova-crate).
+
+```bash
+.venv/bin/fuseki-proto crate generate --out /tmp/my-crate
+# -> /tmp/my-crate/   (crate directory)
+# -> /tmp/my-crate.zip (programmatically packaged archive)
+```
+
 ## The example crate
 
 `cf2-006-weatherstation.crate/` is the committed example — a crate for the

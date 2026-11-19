@@ -123,6 +123,7 @@ fuseki-proto crate generate --out <crate-dir>
 
 The output directory contains `ro-crate-metadata.json`, the packaged graph as a
 `File` data entity (`data/project-graph.jsonld`), `README.md`, and
-`validation-report.json` (the generator's structural self-check). Dependency:
+`validation-report.json` (the generator's structural self-check). The generator
+then **zips the finished crate directory** into `<crate-dir>.zip`. Dependency:
 `rocrate>=0.16.0`. To fully validate a crate against the RO-Crate 1.1 spec, load
 the whole directory into an RO-Crate validator (e.g. the nova-crate editor).

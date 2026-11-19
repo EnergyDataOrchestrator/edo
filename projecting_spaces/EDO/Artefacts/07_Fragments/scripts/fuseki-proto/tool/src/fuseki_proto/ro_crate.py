@@ -30,6 +30,7 @@ from __future__ import annotations
 import datetime as _dt
 import json
 from pathlib import Path
+import shutil
 from typing import cast
 
 import click
@@ -384,8 +385,9 @@ def generate_cmd(ctx, input_file, out_dir):
     """Generate a self-contained RO-Crate directory from the internal format.
 
     Writes ro-crate-metadata.json, data/project-graph.jsonld, README.md and
-    validation-report.json, then prints the structural self-check. Validate the
-    whole directory with nova-crate (spec-v1.1).
+    validation-report.json, prints the structural self-check, then zips the
+    finished crate into <crate-dir>.zip. Validate the whole directory with
+    nova-crate (spec-v1.1).
     """
     src = Path(input_file)
     doc = json.loads(src.read_text(encoding="utf-8"))
@@ -411,3 +413,8 @@ def generate_cmd(ctx, input_file, out_dir):
     click.echo(f"Crate written to {out} — verdict: {report['verdict']}")
     click.echo("Validate the whole directory with nova-crate, e.g.:")
     click.echo(f"  nova-v1.1 validate {out}")
+
+    # package the finished crate directory into a zip archive next to it
+    zip_path = shutil.make_archive(str(out), "zip", root_dir=out.parent,
+                                   base_dir=out.name)
+    click.echo(f"Archive written to {zip_path}")
