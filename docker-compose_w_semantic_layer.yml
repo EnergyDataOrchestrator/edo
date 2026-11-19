@@ -81,6 +81,19 @@ services:
       FUSEKI_USER: "admin"
       FUSEKI_PASSWORD: "edo-proto"
 
+  # novacrate — self-hosted NovaCrate editor for iframe embedding (CF3).
+  # Iframe mode is disabled on the official instance, so we build from source
+  # (pinned tag) with the parent-page origin baked in at build time —
+  # see components/novacrate docs: https://github.com/kit-data-manager/NovaCrate
+  novacrate:
+    build:
+      context: https://github.com/kit-data-manager/NovaCrate.git#v1.14.2
+      args:
+        IFRAME_TARGET_ORIGIN: "http://localhost:5173"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
 networks:
   default:
     name: regimo-network
