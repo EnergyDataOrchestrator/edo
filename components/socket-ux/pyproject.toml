@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "socket-ux"
+version = "0.1.0"
+description = "EDO/Regimo ontology-aware socket presenting the API for the vue-frontend: projects & values from the internal graph database (Fuseki) and on-demand RO-Crate generation for NovaCrate"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "EDO/Regimo — ot2661 (KIT)" }]
+keywords = ["edo", "regimo", "socket", "ux", "ro-crate", "fuseki", "nova-crate"]
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+    "pyld>=2.0.4",
+    "rocrate>=0.14",
+    "confluent-kafka>=2.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

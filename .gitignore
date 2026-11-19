@@ -26,6 +26,7 @@ docker/data/
 # 4. Research Data & Temporary Files
 # Large data exports or temporary RDF serialisations
 data/
+!components/socket-ux/tests/data/
 *.tmp
 *.bak
 *.swp
