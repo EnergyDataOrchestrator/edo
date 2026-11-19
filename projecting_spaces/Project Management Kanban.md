@@ -20,7 +20,6 @@ kanban-plugin: board
 
 ## CF1 — Access Available Sources of Information
 
-- [ ] [[CF1-005]] 03 ● SMS Beschreibung @{2026-12-11}
 - [ ] [[CF1-006]] 04 ● Internes Format Beschreibung @{2026-12-18}
 - [ ] [[CF1-007]] 05 ● LinkML Beschreibung (DMP, SMS, internes Format) @{2027-01-15}
 - [ ] [[CF1-002]] Implement the [[Databus]] within Pigeon / [[Search subject]] function
@@ -63,6 +62,7 @@ kanban-plugin: board
 - [x] [[CF1-004]] 02 ● DMP Erstellung @{2026-11-20} @{2026-11-17}
 - [x] [[CF1-001]] Implement the [[Databus]] as a separated Kafka-Broker @{2026-11-27} @{2026-11-18}
 - [x] [[CF1-003]] 01 ● Definition low level Beispiel (Messreihe) @{2026-11-20} @{2026-11-19}
+- [x] [[CF1-005]] 03 ● SMS Beschreibung @{2026-12-11} @{2026-11-19}
 
 
 
