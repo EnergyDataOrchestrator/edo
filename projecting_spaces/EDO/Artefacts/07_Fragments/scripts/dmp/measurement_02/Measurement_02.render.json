@@ -2,7 +2,7 @@
   "dmp": {
     "title": "maDMP for Measurement_02",
     "created": "2026-03-02T09:54:14.726258+00:00",
-    "modified": "2026-11-18T18:17:59.385231+00:00",
+    "modified": "2026-11-19T05:39:46.118922+00:00",
     "contributor": [
       {
         "name": "A. Koubaa",
@@ -20,6 +20,11 @@
     ],
     "dataset": [
       {
+        "data_quality_assurance": [
+          "completeness checks",
+          "data reconciliation",
+          "sampling procedures"
+        ],
         "description": "Der Datensatz enthält die Netzausbauvorhaben des Bundesbedarfsplangesetzes (BBPlG) als Linienpolygon und weiteren Vorhabeninformationen zum Verfahrensstand Ende des 1. Quartals 2027 (Variant 2).",
         "dataset_id": {
           "identifier": "bnetza_vorhabenpunkte_bbplg_2",

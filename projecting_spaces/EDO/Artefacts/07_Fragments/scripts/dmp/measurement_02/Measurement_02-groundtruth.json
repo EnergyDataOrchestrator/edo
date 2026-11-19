@@ -1,7 +1,7 @@
 {
   "project_id": 4,
   "project_title": "Measurement_02",
-  "dumped": "2026-11-18T18:23:40.189849+00:00",
+  "dumped": "2026-11-19T05:46:29.943330+00:00",
   "answers": [
     {
       "attribute": "project/additional_rdm_policy/yesno",
@@ -298,6 +298,15 @@
       "collection_index": 0,
       "text": "1",
       "value": "Yes",
+      "option": null
+    },
+    {
+      "attribute": "project/dataset/quality_assurance",
+      "set_prefix": "",
+      "set_index": 0,
+      "collection_index": 0,
+      "text": "- completeness checks\n- data reconciliation\n- sampling procedures",
+      "value": "- completeness checks\n- data reconciliation\n- sampling procedures",
       "option": null
     },
     {

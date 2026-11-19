@@ -195,6 +195,7 @@
   },
   "active": "5d0729e563bff5a8",
   "lastOpenFiles": [
+    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-7.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-6.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02.render.json",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/Measurement_02-groundtruth.json",
@@ -211,7 +212,6 @@
     "EDO/Artefacts/07_Fragments/scripts/dmp/semantico",
     "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02/validation-report.md",
     "EDO/Artefacts/07_Fragments/scripts/dmp/04_P04_S04_validate-export.py",
-    "EDO/Artefacts/07_Fragments/scripts/dmp/measurement_02",
     "EDO/Artefacts/07_Fragments/02_DMP_Erstellung.md",
     "EDO/Artefacts/07_Fragments/00_Index.md",
     "EDO/Artefacts/05_Cards/CF1-001.md",

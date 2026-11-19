@@ -1,19 +1,19 @@
 # maDMP export validation report — project 4 "Measurement_02"
 
-*Run:* 2026-11-18T18:23:40.189849+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
+*Run:* 2026-11-19T05:46:29.943330+00:00 · *plugin:* deployed `rdmo_madmp.exports.MaDMPExport` · *mapping:* `03_P03_S03_madmp-export.mapping.yaml`
 
 Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement_02.render.json` (plugin render), this report.
 
 ## Summary
 
 - mapping-spec rows: 62
-- `NOT-ANSWERED`: 29
-- `OK`: 21
+- `NOT-ANSWERED`: 28
+- `OK`: 22
 - `PATH-MISSING-IN-CATALOG`: 11
 - `RESOLVED-EMPTY`: 1
 - answered-but-not-exported values: 44
 - structural checks: 20/20 passed
-- UI export `Measurement_02-6.json` vs. offline render: IDENTICAL
+- UI export `Measurement_02-7.json` vs. offline render: DIFFERENT (re-download the UI export after redeploying)
 
 ## Traceability matrix (mapping spec -> RDMO -> maDMP)
 
@@ -21,7 +21,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 |---|---|---|---|---|---|---|
 | `dmp/title` | `(project title)` |  |  | `maDMP for Measurement_02` | True | **OK** |
 | `dmp/created` | `project.created` |  |  | `2026-03-02T09:54:14.726258+00:00` | True | **OK** |
-| `dmp/modified` | `project.updated` |  |  | `2026-11-18T18:17:59.385231+00:00` | True | **OK** |
+| `dmp/modified` | `project.updated` |  |  | `2026-11-19T05:39:46.118922+00:00` | True | **OK** |
 | `dmp/contact/name` | `project/data_management/name` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dmp/contact/mbox` | `project/data_management/mbox` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dmp/contact/identifier` | `project/data_management/identifier` | False | False | `None` | False | **PATH-MISSING-IN-CATALOG** |
@@ -59,7 +59,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | `dmp/project/end` | `project/schedule/project_end` | True | True | `2027-07-31` | True | **OK** |
 | `dmp/project/title` | `project.title` |  |  | `Measurement_02` | True | **OK** |
 | `dmp/project/description` | `project.description` |  |  | `Example Measurement, as a child-project of IAI.` | True | **OK** |
-| `dataset/fields/data_quality_assurance` | `project/dataset/quality_assurance` | True | False | `[]` | False | **NOT-ANSWERED** |
+| `dataset/fields/data_quality_assurance` | `project/dataset/quality_assurance` | True | True | `["completeness checks", "data reconciliation", "sampling pro` | True | **OK** |
 | `dataset/fields/description` | `project/dataset/description` | True | True | `Der Datensatz enthält die Netzausbauvorhaben des Bundesbedar` | True | **OK** |
 | `dataset/fields/issued` | `project/dataset/data_publication_date` | True | False | `None` | False | **NOT-ANSWERED** |
 | `dataset/fields/keyword` | `project/research_question/keywords` | True | True | `["Testing ecosystem", "BBPlG"]` | True | **OK** |
@@ -138,7 +138,7 @@ Artifacts of this run: `Measurement_02-groundtruth.json` (answers), `Measurement
 | tree root object has "dmp" | ✅ |  |
 | dmp/title required and non-empty | ✅ |  |
 | dmp/created is ISO-8601 timestamp | ✅ | 2026-03-02T09:54:14.726258+00:00 |
-| dmp/modified is ISO-8601 timestamp | ✅ | 2026-11-18T18:17:59.385231+00:00 |
+| dmp/modified is ISO-8601 timestamp | ✅ | 2026-11-19T05:39:46.118922+00:00 |
 | dmp/contributor is a list (if present) | ✅ |  |
 | dmp/contributor[0] has name (str) | ✅ |  |
 | dmp/contributor[0].role is list of str | ✅ |  |
