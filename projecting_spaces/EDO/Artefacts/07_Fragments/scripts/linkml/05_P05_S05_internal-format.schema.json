@@ -239,17 +239,10 @@
                     ]
                 },
                 "data_access": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/DataAccessEnum"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
+                    "$ref": "#/$defs/DataAccessEnum"
                 },
                 "format": {
-                    "description": "IANA media type (e.g. text/csv); RDMO free text is translated in CF2-003.",
+                    "description": "Reconciled in CF2-004: IANA media type as IRI (http://purl.org/NET/mediatypes/<type>), matching the realisation in CF2-003 (trip.py, P34). RDMO free text is translated into these IRIs by the transformation.",
                     "items": {
                         "type": "string"
                     },
@@ -279,6 +272,7 @@
                     ]
                 },
                 "license_start_date": {
+                    "description": "Reconciled in CF2-004: license start date maps to time:hasBeginning, matching the realisation in CF2-003 (trip.py, P39/P42).",
                     "format": "date",
                     "type": [
                         "string",
@@ -368,6 +362,7 @@
                     ]
                 },
                 "interval_end": {
+                    "description": "Reconciled in CF2-004: time:hasEnd (not time:hasEnding), matching the realisation in CF2-003 (trip.py) and the SHACL IntervalShape.",
                     "format": "date",
                     "type": [
                         "string",
@@ -383,6 +378,7 @@
             "description": "License URI + start date (license_start_date from RDMO data_publication_date).",
             "properties": {
                 "license_start_date": {
+                    "description": "Reconciled in CF2-004: license start date maps to time:hasBeginning, matching the realisation in CF2-003 (trip.py, P39/P42).",
                     "format": "date",
                     "type": [
                         "string",
@@ -418,20 +414,21 @@
                     ]
                 },
                 "compartment": {
-                    "description": "SMS CV compartment URI (e.g. smscv:compartments/1/).",
+                    "description": "SMS CV compartment URI (e.g. smscv:compartments/1/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S14).",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "measured_quantity": {
-                    "description": "SMS CV measured-quantity URI (e.g. smscv:measuredquantities/4/).",
+                    "description": "SMS CV measured-quantity URI (e.g. smscv:measuredquantities/4/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S7).",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "measured_quantity_name": {
+                    "description": "Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S8).",
                     "type": [
                         "string",
                         "null"
@@ -456,7 +453,7 @@
                     ]
                 },
                 "sampling_media": {
-                    "description": "SMS CV sampling-media URI (e.g. smscv:samplingmedia/9/).",
+                    "description": "SMS CV sampling-media URI (e.g. smscv:samplingmedia/9/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S13).",
                     "type": [
                         "string",
                         "null"
@@ -646,7 +643,7 @@
                     ]
                 },
                 "sampling_media": {
-                    "description": "SMS CV sampling-media URI (e.g. smscv:samplingmedia/9/).",
+                    "description": "SMS CV sampling-media URI (e.g. smscv:samplingmedia/9/). Mapping reconciled in CF2-004 with the realisation in CF2-003 (trip.py, S13).",
                     "type": [
                         "string",
                         "null"
@@ -712,7 +709,7 @@
     "$id": "https://w3id.org/edo/schemas/internal-format",
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "additionalProperties": true,
-    "metamodel_version": "1.12.0",
+    "metamodel_version": "1.11.0",
     "title": "edo-internal-format-schema",
     "type": "object",
     "version": null
