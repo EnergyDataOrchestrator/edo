@@ -37,7 +37,8 @@ fuseki-proto/
 │   ├── sample-project.ttl        # spec §4 example translated to Turtle
 │   └── backups/                  # created by `fuseki-proto backup` (git-ignored)
 └── tool/                         # src-layout Python CLI (`pip install -e tool`);
-    └── src/fuseki_proto/         #   lifecycle + backup/restore/load/wipe (see tool/README.md)
+    └── src/fuseki_proto/         #   lifecycle + backup/restore/load/wipe + CF2-003
+                                  #   round trip (`trip.py`, see tool/README.md)
 ```
 
 > **Port:** Docker Compose auto-loads `docker-compose.override.yml`, so the
@@ -134,3 +135,6 @@ and the authoritative validation is the `pyshacl` invocation above.
   typed edge the Dataset/Sensor shapes should assert `prov:wasGeneratedBy`.
 * IRIs are placeholders (`urn:` / `edo:`), per spec open item 6 — concrete IRIs
   are fixed by CF1-007 / CF2-004.
+* The CF2-003 transformation realisation lives in `../trafos/` (catalogue
+  `patterns.md` + realisation `README.md`) and is executed by this tool's
+  `trip` command (`fuseki-proto trip run`) — see `tool/README.md`.

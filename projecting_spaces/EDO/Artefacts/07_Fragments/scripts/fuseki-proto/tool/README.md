@@ -36,6 +36,12 @@ fuseki-proto list-backups   # files in backups/
 fuseki-proto restore <file> # empty the dataset then re-upload a backup/ttl dump
 fuseki-proto load <file.ttl> [--graph <name>]   # POST a graph into /projects
 fuseki-proto wipe [--yes]   # CLEAR ALL over /projects (destructive!)
+
+# CF2-003 round trip (see ../../trafos/README.md)
+fuseki-proto trip transform   # DMP + SMS -> internal-format graph (scenario 1)
+fuseki-proto trip store       # store it in /projects + SPARQL/SHACL check (scenario 2)
+fuseki-proto trip verify      # dump /projects, replay, field-level checks (scenario 3)
+fuseki-proto trip run         # all three stages, artifacts in ../data/trip/<ts>/
 ```
 
 The prototype runs **Fuseki Full**, so the web UI is on `http://localhost:3031/`
@@ -48,3 +54,18 @@ Sensible options are derived from `docker-compose.yml`/`docker-compose.override.
 defaults and can be overridden (e.g. `--port`, `--user`, `--password`,
 `--service`, `--dataset`, `--compose-dir`, `--backups-dir`). Run
 `fuseki-proto --help` / `fuseki-proto <cmd> --help` for details.
+
+## The `trip` command (CF2-003)
+
+`trip.py` (module `fuseki_proto.trip`) realises the three acceptance scenarios
+of card CF2-003 end-to-end against the maDMP export
+`scripts/dmp/measurement_02/Measurement_02-13.json` and the SMS device 67
+records: transform (applies the `trafos/patterns.md` catalogue), store (into
+`/projects`, with pyshacl validation when available — install it into the venv
+with `uv pip install pyshacl`, it is optional), verify (dump → replay graph →
+41 field-level checks against the original sources + triple-count equality).
+Sources are overridable (`--dmp`, `--sms-device`, repeatable `--sms-property`).
+Artifacts (`project-graph.ttl`, `roundtrip-dump.ttl`, `trip-report.json`) land
+in `../data/trip/<timestamp>/`; the exit code is 0 only if every round-trip
+check passes (the SHACL verdict is recorded in the report but does not fail the
+run). Full documentation: `../../trafos/README.md`.
