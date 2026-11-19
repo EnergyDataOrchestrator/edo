@@ -47,3 +47,4 @@ projecting_spaces/.obsidian/workspace.json
 # Note: We do NOT ignore the submodule folders themselves.
 # We only ignore potential build artifacts inside them if necessary.
 # However, it is better to manage those within each submodule's own .gitignore.
+*.egg-info/
