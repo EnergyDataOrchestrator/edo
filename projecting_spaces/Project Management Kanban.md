@@ -36,7 +36,7 @@ kanban-plugin: board
 - [ ] [[CF2-004]] 07 ● LinkML Map für Transformation ins interne Format @{2027-03-19}
 - [ ] [[CF2-005]] 08 ● Verknüpfung DMP & SMS @{2027-04-02}
 - [ ] [[CF2-006]] 09 ● Generierung RO Crate aus internem Format @{2027-04-16}
-- [ ] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-04-30}
+- [ ] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-03-26}
 
 
 ## CF3 — Easy Metadata Editing
