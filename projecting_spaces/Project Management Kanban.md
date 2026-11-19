@@ -25,6 +25,8 @@ kanban-plugin: board
 - [ ] [[CF1-006]] 04 ● Internes Format Beschreibung @{2026-12-18}
 - [ ] [[CF1-007]] 05 ● LinkML Beschreibung (DMP, SMS, internes Format) @{2027-01-15}
 - [ ] [[CF1-002]] Implement the [[Databus]] within Pigeon / [[Search subject]] function
+- [ ] [[CF1-008]] 06a ● maDMP Kostenabbildung (Group 5, 18 `project/costs/**`) @{2027-01-08}
+- [ ] [[CF1-009]] 06b ● maDMP Restabbildung (Group 6, ~49 answered-but-unmapped values) @{2027-01-22}
 
 
 ## CF2 — Present Information in Suitable Form
