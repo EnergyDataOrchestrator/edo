@@ -37,6 +37,12 @@ data/
 *.sublime-workspace
 .DS_Store
 
+# 5b. Obsidian UI state (never versioned — local editor state only)
+# The workspace layout is machine-specific editor state; keep it out of git
+# while other .obsidian config files (app.json, community-plugins.json,
+# templates.json, ...) remain tracked.
+projecting_spaces/.obsidian/workspace.json
+
 # 6. Submodule Management
 # Note: We do NOT ignore the submodule folders themselves.
 # We only ignore potential build artifacts inside them if necessary.
