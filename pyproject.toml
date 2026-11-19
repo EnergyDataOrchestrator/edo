@@ -12,7 +12,9 @@ dependencies = [
     "quantulum3[classifier]>=0.10.0",
     "schema-automator>=0.5.5",
     "regimo-core",  # local submodule core/: ontology-aware Kafka bus library
+    "fuseki-proto-tool",  # local: projecting_spaces/.../fuseki-proto/tool (maDMP -> internal format)
 ]
 
 [tool.uv.sources]
-regimo-core = { path = "core" }
+regimo-core = { path = "core", editable = true }
+fuseki-proto-tool = { path = "projecting_spaces/EDO/Artefacts/07_Fragments/scripts/fuseki-proto/tool", editable = true }
