@@ -69,6 +69,39 @@ def test_build_crate_sensor_and_properties():
     assert wind_speed["name"] == "Wind speed"
 
 
+def test_build_crate_funder():
+    """edo:hasFunding -> schema.org funder + contextual Organization entity."""
+    doc = linked_instance()
+    doc["edo:hasFunding"] = {
+        "edo:fundingStatus": "granted",
+        "edo:funder": {
+            "foaf:name": "Helmholtz Metadata Collaboration",
+            "edo:identifier": {
+                "dcterms:identifier": "https://helmholtz-metadaten.de/about-hmc",
+            },
+        },
+    }
+    crate = crate_mod.build_crate(doc, PROJECT_IRI)
+    metadata = crate_mod.crate_metadata_json(crate)
+    graph = _graph(metadata)
+
+    funder_id = "https://helmholtz-metadaten.de/about-hmc"
+    funder = graph[funder_id]
+    assert funder["@type"] == "Organization"
+    assert funder["name"] == "Helmholtz Metadata Collaboration"
+    assert funder["identifier"] == funder_id
+    assert funder["description"] == "Funding status: granted."
+    assert graph["./"]["funder"]["@id"] == funder_id
+
+
+def test_build_crate_no_funding():
+    """Without edo:hasFunding the root dataset carries no funder property."""
+    doc = linked_instance()
+    crate = crate_mod.build_crate(doc, PROJECT_IRI)
+    metadata = crate_mod.crate_metadata_json(crate)
+    assert "funder" not in _graph(metadata)["./"]
+
+
 def test_build_crate_provenance_and_contact():
     doc = linked_instance()
     crate = crate_mod.build_crate(doc, PROJECT_IRI)

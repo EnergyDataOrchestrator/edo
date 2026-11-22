@@ -112,6 +112,14 @@ def build_crate(doc: dict[str, Any], project_iri: str) -> ROCrate:
     contact = _as_dict(_val(project, "edo:hasContact"))
     contact_name = _first_text(contact, "foaf:name")
 
+    # funding -> funder (schema.org "funder" on the root dataset)
+    funding = _as_dict(_val(project, "edo:hasFunding"))
+    funder = _as_dict(_val(funding, "edo:funder"))
+    funder_name = _first_text(funder, "foaf:name")
+    funder_id = _first_text(_as_dict(_val(funder, "edo:identifier")),
+                            "dcterms:identifier")
+    funding_status = _first_text(funding, "edo:fundingStatus")
+
     crate = ROCrate(version=RO_CRATE_VERSION)
     root = crate.root_dataset
     root["name"] = ds_title
@@ -175,6 +183,21 @@ def build_crate(doc: dict[str, Any], project_iri: str) -> ROCrate:
     if contact_name:
         crate.add_jsonld({"@id": "#contact", "@type": "Person", "name": contact_name})
         root["creator"] = {"@id": "#contact"}
+
+    if funder_name or funder_id:
+        funder_ent_id = funder_id or "#funder"
+        funder_ent: dict[str, Any] = {
+            "@id": funder_ent_id,
+            "@type": "Organization",
+            "name": funder_name or funder_id,
+        }
+        if funder_id and funder_id != funder_name:
+            funder_ent["identifier"] = funder_id
+        if funding_status:
+            funder_ent["description"] = f"Funding status: {funding_status}."
+        # note: add_jsonld consumes @id/@type from the dict
+        crate.add_jsonld(funder_ent)
+        root["funder"] = {"@id": funder_ent_id}
 
     return crate
 
