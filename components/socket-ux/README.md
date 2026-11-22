@@ -61,7 +61,7 @@ socket usable before and without the databus.
 ### RO-Crate on demand
 
 `crate.py` mirrors the essential structure of
-`projecting_spaces/EDO/Artefacts/07_Fragments/scripts/fuseki-proto/tool/src/fuseki_proto/ro_crate.py`
+`infrastructure/fuseki-proto/tool/src/fuseki_proto/ro_crate.py`
 (CF2-006) but builds a **metadata-only** crate for interactive display: the
 internal-format graph stays in the internal database and is referenced from
 the root dataset via `isBasedOn`. The provenance-rich batch generation with
@@ -78,6 +78,15 @@ the packaged graph file remains in `fuseki-proto`.
 | `ONTOLOGY_PATH` | *(unset)* | Path to `regimo.ttl`; source of the `ontology_uri` header |
 
 ## Run
+
+The graph database must be up first (Fuseki on host port 3031, dataset
+`/projects`):
+
+```sh
+uv run fuseki-proto start        # from the edo root; details: infrastructure/README.md
+```
+
+Then the socket:
 
 ```sh
 uv venv && uv pip install -e ".[test]"   # or: pip install -e .

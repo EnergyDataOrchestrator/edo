@@ -2,7 +2,7 @@
 
 The socket asks the internal database for the projects and their values:
 project graphs live in the TDB2 ``/projects`` dataset as internal-format
-RDF (see ``scripts/fuseki-proto``). All queries use basic auth, mirroring
+RDF (see ``infrastructure/fuseki-proto``). All queries use basic auth, mirroring
 ``fuseki-proto``'s tool (``docker.py``).
 """
 

@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -792,7 +792,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fuseki-proto-tool", editable = "projecting_spaces/EDO/Artefacts/07_Fragments/scripts/fuseki-proto/tool" },
+    { name = "fuseki-proto-tool", editable = "infrastructure/fuseki-proto/tool" },
     { name = "graphviz", specifier = ">=0.21" },
     { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "linkml", specifier = ">=1.11.1" },
@@ -937,7 +937,7 @@ wheels = [
 [[package]]
 name = "fuseki-proto-tool"
 version = "0.1.0"
-source = { editable = "projecting_spaces/EDO/Artefacts/07_Fragments/scripts/fuseki-proto/tool" }
+source = { editable = "infrastructure/fuseki-proto/tool" }
 dependencies = [
     { name = "click" },
     { name = "rocrate" },
