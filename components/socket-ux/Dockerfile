@@ -6,7 +6,7 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install --no-cache-dir .
 
-# Ontology is mounted read-only (see the root docker-compose.yml, profile 'semantic')
+# Ontology is mounted read-only (see the root docker-compose.yml)
 VOLUME /app/ontology
 
 EXPOSE 8090

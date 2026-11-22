@@ -24,8 +24,8 @@ edo/                                    ← umbrella repo  (git@github.com:Energ
 │   └── qt-frontend/                    ← tracked in edo (Qt desktop client)
 ├── StageHMC/                           ← submodule: StageHMC (visualization/staging)
 ├── projecting_spaces/                  ← tracked in edo (research docs: cards CF1–CF4, fragments, artefacts)
-├── docker-compose.yml                  ← Kafka + Zookeeper (bus layer);
-│                                         `--profile semantic` adds Schema Registry, socket-ux, NovaCrate
+├── docker-compose.yml                  ← full runtime stack: Kafka + Zookeeper (bus layer),
+│                                         Schema Registry, socket-ux, NovaCrate (semantic layer)
 ├── pyproject.toml / uv.lock            ← shared Python tooling (linkml, linkml-map, regimo-core, fuseki-proto-tool, …)
 ├── LICENSE
 └── .gitmodules                         ← submodule paths and URLs
@@ -74,11 +74,9 @@ git submodule update --init --recursive
 # Python tooling (creates .venv from pyproject.toml / uv.lock)
 uv sync
 
-# Start the bus (Kafka + Zookeeper)
+# Start the full stack: bus (Kafka + Zookeeper) + semantic layer
+# (Schema Registry :8081, socket-ux :8090, NovaCrate :3000)
 docker compose up -d
-
-# … plus the semantic layer (Schema Registry :8081, socket-ux :8090, NovaCrate :3000)
-docker compose --profile semantic up -d
 
 # Start the graph database (Fuseki Full, web UI at http://localhost:3031/)
 uv run fuseki-proto start
@@ -91,7 +89,7 @@ cd infrastructure/Servers/rdmo-app && source env/bin/activate && python manage.p
 ```
 
 Running the semantic layer components **from source** instead of the compose
-profile (useful while developing them):
+stack (useful while developing them):
 
 ```bash
 # socket-ux API (http://localhost:8090)

@@ -1,11 +1,9 @@
 # ---------------------------------------------------------------------------
 # docker-compose.yml — the EDO runtime stack
 #
-# Two layers, selected with Compose profiles:
-#
-#   docker compose up -d                     → bus layer only (Kafka + Zookeeper)
-#   docker compose --profile semantic up -d  → bus + semantic layer
-#                                              (Schema Registry, socket-ux, NovaCrate)
+# One `docker compose up -d` brings up the full stack:
+#   bus layer (Zookeeper, Kafka) + semantic layer
+#   (Schema Registry, socket-ux, NovaCrate)
 #
 # socket-rdmo / socket-pv-data are kept as comments at the bottom: they have no
 # Dockerfile yet (socket-rdmo runs from source, socket-pv-data's build context
@@ -41,10 +39,9 @@ services:
     # This command forces the use of your properties file without KRaft checks
     command: /usr/bin/kafka-server-start /etc/kafka/server.properties
 
-  # --- SEMANTIC LAYER (docker compose --profile semantic up -d) --------------
+  # --- SEMANTIC LAYER ---------------------------------------------------------
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.0
-    profiles: [semantic]
     depends_on:
       - kafka
     ports:
@@ -60,7 +57,6 @@ services:
     build:
       context: ./components/socket-ux
       dockerfile: Dockerfile
-    profiles: [semantic]
     depends_on:
       - kafka
       - schema-registry
@@ -88,7 +84,6 @@ services:
       context: https://github.com/kit-data-manager/NovaCrate.git#v1.14.2
       args:
         IFRAME_TARGET_ORIGIN: "http://localhost:5173"
-    profiles: [semantic]
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -101,7 +96,6 @@ services:
   #   build:
   #     context: ./components/socket-rdmo
   #     dockerfile: Dockerfile
-  #   profiles: [semantic]
   #   depends_on:
   #     - kafka
   #     - schema-registry
@@ -117,7 +111,6 @@ services:
   # socket-pv-data:
   #   build:
   #     context: ./components/socket-sms
-  #   profiles: [semantic]
   #   depends_on:
   #     - kafka
   #   environment:
