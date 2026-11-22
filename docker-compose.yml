@@ -1,4 +1,22 @@
+# ---------------------------------------------------------------------------
+# docker-compose.yml — the EDO runtime stack
+#
+# Two layers, selected with Compose profiles:
+#
+#   docker compose up -d                     → bus layer only (Kafka + Zookeeper)
+#   docker compose --profile semantic up -d  → bus + semantic layer
+#                                              (Schema Registry, socket-ux, NovaCrate)
+#
+# socket-rdmo / socket-pv-data are kept as comments at the bottom: they have no
+# Dockerfile yet (socket-rdmo runs from source, socket-pv-data's build context
+# `components/socket-sms` does not exist).
+#
+# Ports: Kafka 9092, Schema Registry 8081, socket-ux 8090, NovaCrate 3000.
+# Fuseki (graph DB) is NOT part of this file — it lives in
+# infrastructure/fuseki-proto/docker-compose.yml (host port 3031).
+# ---------------------------------------------------------------------------
 services:
+  # --- BUS LAYER (always up) -------------------------------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0  # Explicit stable version
     volumes:
@@ -22,3 +40,89 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     # This command forces the use of your properties file without KRaft checks
     command: /usr/bin/kafka-server-start /etc/kafka/server.properties
+
+  # --- SEMANTIC LAYER (docker compose --profile semantic up -d) --------------
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.0
+    profiles: [semantic]
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
+
+  # socket-ux — ontology-aware socket presenting the API for the vue-frontend:
+  # projects & values from the internal graph database (Fuseki) and on-demand
+  # RO-Crate generation for NovaCrate.
+  socket-ux:
+    build:
+      context: ./components/socket-ux
+      dockerfile: Dockerfile
+    profiles: [semantic]
+    depends_on:
+      - kafka
+      - schema-registry
+    ports:
+      - "8090:8090"
+    volumes:
+      # Mount the ontology so the socket is 'ontology-aware' at runtime
+      - ./schema/ontology:/app/ontology:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      ONTOLOGY_PATH: "/app/ontology/regimo.ttl"
+      FUSEKI_URL: "http://host.docker.internal:3031"
+      FUSEKI_DATASET: "projects"
+      FUSEKI_USER: "admin"
+      FUSEKI_PASSWORD: "edo-proto"
+
+  # novacrate — self-hosted NovaCrate editor for iframe embedding (CF3).
+  # Iframe mode is disabled on the official instance, so we build from source
+  # (pinned tag) with the parent-page origin baked in at build time —
+  # see components/novacrate docs: https://github.com/kit-data-manager/NovaCrate
+  novacrate:
+    build:
+      context: https://github.com/kit-data-manager/NovaCrate.git#v1.14.2
+      args:
+        IFRAME_TARGET_ORIGIN: "http://localhost:5173"
+    profiles: [semantic]
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  # --- NOT READY YET ---------------------------------------------------------
+  # socket-rdmo — no Dockerfile in components/socket-rdmo yet; run it from
+  # source (uvicorn) until then. Its intended compose definition:
+  #
+  # socket-rdmo:
+  #   build:
+  #     context: ./components/socket-rdmo
+  #     dockerfile: Dockerfile
+  #   profiles: [semantic]
+  #   depends_on:
+  #     - kafka
+  #     - schema-registry
+  #   volumes:
+  #     - ./schema/ontology:/app/ontology:ro
+  #   environment:
+  #     KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+  #     RDMO_API_TOKEN: ${RDMO_API_TOKEN}
+  #     ONTOLOGY_PATH: "/app/ontology/regimo.ttl"
+
+  # socket-pv-data — build context ./components/socket-sms does not exist:
+  #
+  # socket-pv-data:
+  #   build:
+  #     context: ./components/socket-sms
+  #   profiles: [semantic]
+  #   depends_on:
+  #     - kafka
+  #   environment:
+  #     KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+
+networks:
+  default:
+    name: regimo-network
