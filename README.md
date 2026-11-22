@@ -10,31 +10,37 @@ with independent histories and release cycles, while still being easy to orchest
 ## Project Structure
 
 ```orga
-edo/                                    ← umbrella repo  (git@github.com:koubaa-hmc/edo.git)
+edo/                                    ← umbrella repo  (git@github.com:EnergyDataOrchestrator/edo.git)
 ├── core/                               ← submodule: regimo-core
 ├── schema/
 │   └── ontology/                       ← submodule: regimo-ontology
 ├── components/
 │   ├── socket-rdmo/                    ← submodule: socket-rdmo
+│   ├── socket-ux/                      ← tracked in edo (API socket for the vue-frontend)
 │   └── utils/                          ← tracked in edo (helper scripts)
 ├── infrastructure/                     ← submodule: regimo-infrastructure
 ├── frontend/
 │   ├── vue-frontend/                   ← submodule: vue-frontend
 │   └── qt-frontend/                    ← tracked in edo (Qt desktop client)
+├── StageHMC/                           ← submodule: StageHMC (visualization/staging)
+├── projecting_spaces/                  ← tracked in edo (research docs: cards CF1–CF4, fragments, artefacts)
 ├── docker-compose.yml                  ← Kafka + Zookeeper
-├── docker-compose_w_semantic_layer.yml ← + Schema Registry and sockets
-├── pyproject.toml / uv.lock            ← shared Python tooling (linkml, linkml-map, …)
+├── docker-compose_w_semantic_layer.yml ← + Schema Registry, sockets, NovaCrate
+├── pyproject.toml / uv.lock            ← shared Python tooling (linkml, linkml-map, regimo-core, fuseki-proto-tool, …)
+├── LICENSE
 └── .gitmodules                         ← submodule paths and URLs
 ```
 
 | Path | Repository | Category | Purpose |
 | :--- | :--- | :--- | :--- |
-| `core/` | `EnergyDataOrchestrator/regimo-core` | **Core** | Base abstractions and internal libraries: Kafka producer/consumer patterns, socket base classes, telemetry. |
+| `core/` | `EnergyDataOrchestrator/regimo-core` | **Core** | Base abstractions and internal libraries: Kafka producer/consumer patterns, socket base classes, the 6-header message contract, telemetry, and the RDMO→Fuseki sync engine. |
 | `schema/ontology/` | `EnergyDataOrchestrator/regimo-ontology` | **Schema** | The semantic backbone and *single source of truth*: OWL/TTL models, LinkML schemas, translation bindings. |
-| `components/socket-<unit>/` | `EnergyDataOrchestrator/socket-<unit>` | **Logic** | Microservices ("sockets") handling specific energy data tasks, e.g. `socket-rdmo`. |
+| `components/socket-rdmo/` | `EnergyDataOrchestrator/socket-rdmo` | **Logic** | Bridge socket between the energy bus and RDMO: maDMP export plugin, semantic mapping of energy data to RDM metadata. |
+| `components/socket-<unit>/` | `EnergyDataOrchestrator/socket-<unit>` | **Logic** | Further microservices ("sockets") handling specific energy data tasks. |
 | `infrastructure/` | `EnergyDataOrchestrator/regimo-infrastructure` | **Ops** | Kafka configuration, Zookeeper/KRaft setups, CI/CD pipelines. |
 | `frontend/vue-frontend/` | `EnergyDataOrchestrator/vue-frontend` | **UI** | Web frontend. |
-| `frontend/qt-frontend/`, `components/utils/`, compose files | *this repo* | — | Code and configuration that belongs to `edo` itself. |
+| `StageHMC/` | `GhassenMr07/StageHMC` | **UI** | Visualization/staging submodule. |
+| `components/socket-ux/`, `frontend/qt-frontend/`, `components/utils/`, `projecting_spaces/`, compose files | *this repo* | — | Code and configuration that belongs to `edo` itself. |
 
 > **Rule of thumb:** code inside a submodule directory belongs to *that component's repository* and is committed
 > there. `edo` only records *which commit* of each component is used.
@@ -55,7 +61,7 @@ edo/                                    ← umbrella repo  (git@github.com:kouba
 
 ```bash
 # Clone edo together with all submodules
-git clone --recurse-submodules git@github.com:koubaa-hmc/edo.git
+git clone --recurse-submodules git@github.com:EnergyDataOrchestrator/edo.git
 cd edo
 
 # Already cloned without --recurse-submodules? Populate the submodules:
@@ -183,7 +189,7 @@ directory from its repository and history.
 
 | Action | Command |
 | :--- | :--- |
-| **Clone everything** | `git clone --recurse-submodules git@github.com:koubaa-hmc/edo.git` |
+| **Clone everything** | `git clone --recurse-submodules git@github.com:EnergyDataOrchestrator/edo.git` |
 | **First-time setup / sync to pinned commits** | `git submodule update --init --recursive` |
 | **Show pinned commits and branches** | `git submodule status` |
 | **Update all components to their latest remote `main`** | `git submodule update --remote --merge` |
