@@ -86,6 +86,10 @@ uv run fuseki-proto status       # verify; datasets /projects (persisted) + /sha
 # Start the RDMO dev instance (details: infrastructure/README.md)
 cd infrastructure/Servers/rdmo-app && source env/bin/activate && python manage.py runserver
 # → http://127.0.0.1:8000/  (admin / admin — local dev only)
+
+# One-time (idempotent): install the maDMP export plugin into RDMO
+# (package + registration + GET /api/v1/madmp/projects/{pk}/ API route)
+python3 infrastructure/scripts/install_madmp_exporter.py
 ```
 
 Running the semantic layer components **from source** instead of the compose
