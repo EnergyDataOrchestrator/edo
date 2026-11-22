@@ -946,8 +946,11 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.1" },
+    { name = "linkml-map", marker = "extra == 'agnostic'", specifier = ">=0.5" },
+    { name = "linkml-runtime", marker = "extra == 'agnostic'", specifier = ">=1.7" },
     { name = "rocrate", specifier = ">=0.16.0" },
 ]
+provides-extras = ["agnostic"]
 
 [[package]]
 name = "google"
