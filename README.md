@@ -24,8 +24,8 @@ edo/                                    ← umbrella repo  (git@github.com:Energ
 │   └── qt-frontend/                    ← tracked in edo (Qt desktop client)
 ├── StageHMC/                           ← submodule: StageHMC (visualization/staging)
 ├── projecting_spaces/                  ← tracked in edo (research docs: cards CF1–CF4, fragments, artefacts)
-├── docker-compose.yml                  ← Kafka + Zookeeper
-├── docker-compose_w_semantic_layer.yml ← + Schema Registry, sockets, NovaCrate
+├── docker-compose.yml                  ← Kafka + Zookeeper (bus layer);
+│                                         `--profile semantic` adds Schema Registry, socket-ux, NovaCrate
 ├── pyproject.toml / uv.lock            ← shared Python tooling (linkml, linkml-map, regimo-core, fuseki-proto-tool, …)
 ├── LICENSE
 └── .gitmodules                         ← submodule paths and URLs
@@ -44,7 +44,7 @@ edo/                                    ← umbrella repo  (git@github.com:Energ
 | `infrastructure/` | `EnergyDataOrchestrator/regimo-infrastructure` | **Ops** | Kafka configuration, Zookeeper/KRaft setups, CI/CD pipelines, the Fuseki graph-database stack (`fuseki-proto/`), and the local RDMO dev instance (`Servers/rdmo-app`). |
 | `frontend/vue-frontend/` | `EnergyDataOrchestrator/vue-frontend` | **UI** | Web frontend. |
 | `StageHMC/` | `GhassenMr07/StageHMC` | **UI** | Visualization/staging submodule. |
-| `components/socket-ux/`, `frontend/qt-frontend/`, `components/utils/`, `projecting_spaces/`, compose files | *this repo* | — | Code and configuration that belongs to `edo` itself. |
+| `components/socket-ux/`, `frontend/qt-frontend/`, `components/utils/`, `projecting_spaces/`, `docker-compose.yml` | *this repo* | — | Code and configuration that belongs to `edo` itself. |
 
 > **Rule of thumb:** code inside a submodule directory belongs to *that component's repository* and is committed
 > there. `edo` only records *which commit* of each component is used.
@@ -58,7 +58,7 @@ edo/                                    ← umbrella repo  (git@github.com:Energ
   boilerplate for new components.
 - **Kafka Bus Integration.** A shared "Regimo-Bus-Adapter" library (hosted via GitHub Packages) should be a
   dependency of every socket to handle standardised ontology-metadata headers and schema-based (de)serialisation.
-- **Infrastructure & Orchestration.** Docker Compose files (and later Kubernetes/Helm) define how the Kafka bus and
+- **Infrastructure & Orchestration.** Docker Compose (and later Kubernetes/Helm) defines how the Kafka bus and
   the sockets are wired together; documentation is to be centralised (MkDocs/Sphinx on GitHub Pages).
 
 ## Getting Started
@@ -74,8 +74,11 @@ git submodule update --init --recursive
 # Python tooling (creates .venv from pyproject.toml / uv.lock)
 uv sync
 
-# Start Kafka
+# Start the bus (Kafka + Zookeeper)
 docker compose up -d
+
+# … plus the semantic layer (Schema Registry :8081, socket-ux :8090, NovaCrate :3000)
+docker compose --profile semantic up -d
 
 # Start the graph database (Fuseki Full, web UI at http://localhost:3031/)
 uv run fuseki-proto start
@@ -85,6 +88,21 @@ uv run fuseki-proto status       # verify; datasets /projects (persisted) + /sha
 # Start the RDMO dev instance (details: infrastructure/README.md)
 cd infrastructure/Servers/rdmo-app && source env/bin/activate && python manage.py runserver
 # → http://127.0.0.1:8000/  (admin / admin — local dev only)
+```
+
+Running the semantic layer components **from source** instead of the compose
+profile (useful while developing them):
+
+```bash
+# socket-ux API (http://localhost:8090)
+cd components/socket-ux
+uv venv .venv && uv pip install --python .venv/bin/python -e ".[test]"
+.venv/bin/uvicorn socket_ux.api:app --port 8090 --reload
+
+# vue-frontend dev server (http://localhost:5173; proxies /ux → :8090,
+# /api → :8484 RDMO, /schema-registry → :8081)
+cd frontend/vue-frontend
+pnpm install && pnpm dev
 ```
 
 After cloning, every submodule is checked out in **detached HEAD** at the commit pinned by `edo`. That is fine for
