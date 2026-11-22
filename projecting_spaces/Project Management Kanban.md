@@ -35,7 +35,6 @@ kanban-plugin: board
 - [ ] [[CF2-004]] 07 ● LinkML Map für Transformation ins interne Format @{2027-03-19}
 - [ ] [[CF2-005]] 08 ● Verknüpfung DMP & SMS @{2027-04-02}
 - [ ] [[CF2-006]] 09 ● Generierung RO Crate aus internem Format @{2027-04-16}
-- [ ] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-03-26}
 
 
 ## CF3 — Easy Metadata Editing
@@ -65,6 +64,8 @@ kanban-plugin: board
 - [x] [[CF1-006]] 04 ● Internes Format Beschreibung @{2026-12-18} @{2026-11-19}
 - [x] [[CF1-010]] F7 ● SMS Device-Properties vollständig exportieren (157–161) @{2027-02-05} @{2026-11-19}
 - [x] [[CF1-007]] 05 ● LinkML Beschreibung (DMP, SMS, internes Format) @{2027-01-15} @{2026-11-19}
+- [x] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-03-26} @{2026-11-23}
+- [x] [[CF1-011]] edo-infra ● Definitionen für das Infrastruktur-Script-Modul @{2026-11-22} @{2026-11-23}
 
 
 
