@@ -66,6 +66,7 @@ kanban-plugin: board
 - [x] [[CF1-007]] 05 ● LinkML Beschreibung (DMP, SMS, internes Format) @{2027-01-15} @{2026-11-19}
 - [x] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-03-26} @{2026-11-23}
 - [x] [[CF1-011]] edo-infra ● Definitionen für das Infrastruktur-Script-Modul @{2026-11-22} @{2026-11-23}
+- [x] [[2026-11-23_v0.1.0]] Release v0.1.0 — first verified end-to-end chain (tags in allen 6 Repos + CHANGELOGs) @{2026-11-23} @{2026-11-23}
 
 
 
