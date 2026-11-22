@@ -18,7 +18,7 @@ edo/                                    ← umbrella repo  (git@github.com:Energ
 │   ├── socket-rdmo/                    ← submodule: socket-rdmo
 │   ├── socket-ux/                      ← tracked in edo (API socket for the vue-frontend)
 │   └── utils/                          ← tracked in edo (helper scripts)
-├── infrastructure/                     ← submodule: regimo-infrastructure
+├── infrastructure/                     ← submodule: regimo-infrastructure (Kafka config, Servers/rdmo-app dev instance)
 ├── frontend/
 │   ├── vue-frontend/                   ← submodule: vue-frontend
 │   └── qt-frontend/                    ← tracked in edo (Qt desktop client)
@@ -37,7 +37,7 @@ edo/                                    ← umbrella repo  (git@github.com:Energ
 | `schema/ontology/` | `EnergyDataOrchestrator/regimo-ontology` | **Schema** | The semantic backbone and *single source of truth*: OWL/TTL models, LinkML schemas, translation bindings. |
 | `components/socket-rdmo/` | `EnergyDataOrchestrator/socket-rdmo` | **Logic** | Bridge socket between the energy bus and RDMO: maDMP export plugin, semantic mapping of energy data to RDM metadata. |
 | `components/socket-<unit>/` | `EnergyDataOrchestrator/socket-<unit>` | **Logic** | Further microservices ("sockets") handling specific energy data tasks. |
-| `infrastructure/` | `EnergyDataOrchestrator/regimo-infrastructure` | **Ops** | Kafka configuration, Zookeeper/KRaft setups, CI/CD pipelines. |
+| `infrastructure/` | `EnergyDataOrchestrator/regimo-infrastructure` | **Ops** | Kafka configuration, Zookeeper/KRaft setups, CI/CD pipelines, and the local RDMO dev instance (`Servers/rdmo-app`). |
 | `frontend/vue-frontend/` | `EnergyDataOrchestrator/vue-frontend` | **UI** | Web frontend. |
 | `StageHMC/` | `GhassenMr07/StageHMC` | **UI** | Visualization/staging submodule. |
 | `components/socket-ux/`, `frontend/qt-frontend/`, `components/utils/`, `projecting_spaces/`, compose files | *this repo* | — | Code and configuration that belongs to `edo` itself. |
@@ -72,6 +72,9 @@ uv sync
 
 # Start Kafka
 docker compose up -d
+
+# Start the RDMO dev instance (details: infrastructure/README.md)
+cd infrastructure/Servers/rdmo-app && source env/bin/activate && python manage.py runserver
 ```
 
 After cloning, every submodule is checked out in **detached HEAD** at the commit pinned by `edo`. That is fine for
