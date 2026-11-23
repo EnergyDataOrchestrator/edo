@@ -50,6 +50,12 @@ kanban-plugin: board
 - [ ] [[CF4-002]] 11b ● LinkML Map für OEP-Transformation @{2027-06-11}
 
 
+## UI Uplift
+
+- [ ] [[UPL-001]] UI Uplift ● Optimistische Nebenläufigkeitskontrolle (Revision Tokens, If-Match/409, SSE-Invalidation) @{2027-01-15}
+- [ ] [[UPL-002]] UI Uplift ● RBAC — Rollen guest/fellow/steward/admin über alle Domains @{2027-02-12}
+
+
 ## Review & Feedback
 
 - [ ] [[REV-001]] 12 ● High Level Wiederholung: Skalierbarkeitsanalyse & Lessons Learned @{2027-06-25}
