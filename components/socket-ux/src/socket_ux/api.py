@@ -13,6 +13,12 @@ The API the vue-frontend talks to:
                                          POST publish admin) — card UPL-002
 
 ``pid`` is the URL-encoded project IRI from the internal database.
+
+OCC (UPL-001): ``GET .../crate`` serves the *committed* crate from the named
+Fuseki graph ``urn:edo:crate:<pid>`` (falling back to the derived crate when
+nothing was committed yet); ``PUT .../crate`` persists a crate edit under
+``If-Match`` optimistic concurrency (``428`` without the header, ``409`` with
+a full conflict payload on stale tokens, card UPL-001 step 3).
 """
 
 from __future__ import annotations
@@ -29,6 +35,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from . import crate as crate_mod
+from . import crate_store
 from . import fuseki
 from . import auth
 from .bus import CRATE_TOPIC, SOCKET_ID, BusPublisher, MessageHeader, ORDERED_HEADER_KEYS, ontology_uri_from_path
@@ -36,7 +43,7 @@ from .config import get_settings
 from .databus import DatabusStore, broker_online, list_topics
 from .events import BusEvent, EventBus, subscriber_from_settings
 from .internal_format import project_doc
-from .occ import TokenStore, canonical_digest
+from .occ import TokenStore, canonical_digest, diff_documents
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +158,7 @@ def projects() -> dict[str, Any]:
     return {"projects": found}
 
 
-def _etag_response(content: Any, token: str) -> JSONResponse:
+def _etag_response(content: Any, token: str, extra: dict[str, str] | None = None) -> JSONResponse:
     """JSON response carrying the slice's revision token (UPL-001).
 
     The token travels as ``ETag`` (strong validator, quoted per RFC 7232) and
@@ -159,10 +166,10 @@ def _etag_response(content: Any, token: str) -> JSONResponse:
     served bodies stay untouched — NovaCrate and the JSON tree must not see
     transport metadata.
     """
-    return JSONResponse(content=content, headers={
-        "ETag": f'"{token}"',
-        "X-Revision-Token": token,
-    })
+    headers = {"ETag": f'"{token}"', "X-Revision-Token": token}
+    if extra:
+        headers.update(extra)
+    return JSONResponse(content=content, headers=headers)
 
 
 @app.get("/api/v1/projects/{pid:path}/values")
@@ -185,7 +192,11 @@ def project_values(pid: str) -> JSONResponse:
 
 @app.get("/api/v1/projects/{pid:path}/crate")
 def project_crate(pid: str) -> JSONResponse:
-    """RO-Crate metadata JSON for one project, ready for NovaCrate."""
+    """RO-Crate metadata JSON for one project, ready for NovaCrate.
+
+    Serves the committed crate (named Fuseki graph, UPL-001 decision (a))
+    when one exists, else the crate derived from the project graph.
+    """
     import httpx
 
     settings = get_settings()
@@ -193,13 +204,17 @@ def project_crate(pid: str) -> JSONResponse:
         with httpx.Client(timeout=15.0) as client:
             graph = fuseki.project_graph_jsonld(settings, pid, client)
             doc = project_doc(graph, pid)
+            committed = crate_store.load_committed(settings, pid, client)
     except fuseki.FusekiError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     crate = crate_mod.build_crate(doc, pid)
-    metadata = crate_mod.crate_metadata_json(crate)
+    derived = crate_mod.crate_metadata_json(crate)
+    metadata = committed if committed is not None else derived
+    source = "committed" if committed is not None else "derived"
+    token = token_store().observe(f"fep:crate:{pid}", metadata)
 
     _broker.publish(BusEvent(
         topic="local.crate.v1",
@@ -208,7 +223,9 @@ def project_crate(pid: str) -> JSONResponse:
     ))
     publisher().publish(
         CRATE_TOPIC,
-        {"project": pid, "crate_root": metadata.get("@graph", [{}])[0].get("@id", "./")},
+        {"event": "crate.served", "project": pid,
+         "crate_source": source,
+         "crate_root": metadata.get("@graph", [{}])[0].get("@id", "./")},
         MessageHeader(
             socket_id=SOCKET_ID,
             project_id=pid,
@@ -217,8 +234,101 @@ def project_crate(pid: str) -> JSONResponse:
             lineage=f"fuseki/{settings.fuseki_dataset} -> socket-ux -> nova-crate",
         ),
     )
-    token = token_store().observe(f"fep:crate:{pid}", metadata)
-    return _etag_response(metadata, str(token))
+    return _etag_response(metadata, str(token), extra={"X-Crate-Source": source})
+
+
+@app.put("/api/v1/projects/{pid:path}/crate")
+def project_crate_put(pid: str, request: Request, body: dict[str, Any]) -> JSONResponse:
+    """Commit a crate edit under optimistic concurrency (UPL-001 steps 2b/3).
+
+    ``If-Match`` must carry the current revision token of ``fep:crate:<pid>``:
+    missing → ``428``, stale → ``409`` with ``{code, current_revision_token,
+    current_digest_sha256, updated_by, updated_at, server_record,
+    field_conflicts}`` and *no* partial write. On match the crate is stored in
+    the named Fuseki graph ``urn:edo:crate:<pid>`` and announced on
+    ``edo.crate.v1`` (``crate.committed``) + SSE.
+    """
+    import httpx
+
+    settings = get_settings()
+    auth.require_capability("editCrate", settings)
+    if_match = request.headers.get("if-match", "").strip().strip('"')
+    if not if_match:
+        raise HTTPException(status_code=428, detail={
+            "code": "precondition_required",
+            "message": "If-Match with the current revision token is required "
+                       "(GET .../crate first)",
+        })
+    if not isinstance(body, dict) or not body.get("@graph"):
+        raise HTTPException(status_code=400, detail={
+            "code": "invalid_crate", "message": "body must be ro-crate-metadata.json JSON-LD with an @graph",
+        })
+
+    scope = f"fep:crate:{pid}"
+    actor = request.headers.get("x-socket-id", "") or "unknown-client"
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            graph = fuseki.project_graph_jsonld(settings, pid, client)
+            doc = project_doc(graph, pid)
+            committed = crate_store.load_committed(settings, pid, client)
+    except fuseki.FusekiError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    derived = crate_mod.crate_metadata_json(crate_mod.build_crate(doc, pid))
+    current_metadata = committed if committed is not None else derived
+    # Make the store reflect the current state (no-op when unchanged) so the
+    # If-Match check compares against what GET would have served.
+    token_store().observe(scope, current_metadata)
+    new_token, conflict = token_store().commit(scope, body, if_match, actor=actor)
+    if conflict is not None:
+        raise HTTPException(status_code=409, detail={
+            **conflict,
+            "code": "revision_conflict",
+            "server_record": current_metadata,
+            "field_conflicts": diff_documents(body, current_metadata),
+        })
+
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            crate_store.save_committed(settings, pid, body, client)
+    except crate_store.CrateValidationError as exc:
+        # The token advanced on the optimistic check, but the body cannot be
+        # persisted; roll the observed state back so the client may retry.
+        token_store().observe(scope, current_metadata, actor=actor)
+        raise HTTPException(status_code=400, detail={
+            "code": "invalid_crate", "message": str(exc),
+        }) from exc
+    except fuseki.FusekiError as exc:
+        token_store().observe(scope, current_metadata, actor=actor)
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    payload = {
+        "committed": True,
+        "event": "crate.committed",
+        "project": pid,
+        "revision_token": str(new_token),
+        "digest_sha256": new_token.digest,
+        "updated_by": actor,
+    }
+    _broker.publish(BusEvent(
+        topic="local.crate.v1",
+        payload=payload,
+        headers={"socket_id": SOCKET_ID},
+    ))
+    publisher().publish(
+        CRATE_TOPIC,
+        payload,
+        MessageHeader(
+            socket_id=SOCKET_ID,
+            project_id=pid,
+            schema_id="ro-crate-1.1",
+            ontology_uri=ontology_uri_from_path(settings.ontology_path),
+            lineage=f"socket-ux crate commit -> fuseki/{settings.fuseki_dataset}#{crate_store.crate_graph_uri(pid)}",
+        ),
+    )
+    return _etag_response(payload, str(new_token))
 
 
 # -- server-sent events (CF1): project changes reach the front end live ------

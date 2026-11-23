@@ -26,6 +26,7 @@ import os
 import tempfile
 import threading
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 TOKEN_PREFIX = "rev:"
@@ -115,7 +116,7 @@ class TokenStore:
 
     # -- token operations --------------------------------------------------------
 
-    def observe(self, scope: str, content: Any) -> RevisionToken:
+    def observe(self, scope: str, content: Any, actor: str | None = None) -> RevisionToken:
         """Token for ``content``; advances the sequence when the digest changed."""
         digest = canonical_digest(content)
         with self._lock:
@@ -123,9 +124,49 @@ class TokenStore:
             if current is not None and current.get("digest") == digest:
                 return RevisionToken(seq=current["seq"], digest=digest)
             seq = (current["seq"] + 1) if current else 1
-            self._scopes[scope] = {"seq": seq, "digest": digest}
+            self._scopes[scope] = self._entry(seq, digest, actor)
             self._save()
             return RevisionToken(seq=seq, digest=digest)
+
+    def commit(
+        self, scope: str, content: Any, if_match: str,
+        actor: str | None = None,
+    ) -> tuple[RevisionToken, dict[str, Any] | None]:
+        """Committed write under optimistic concurrency (UPL-001 step 3).
+
+        Validates ``if_match`` against the *current* token of the scope. On
+        match the token advances and the new one is returned; on mismatch a
+        conflict payload is returned (``(current, conflict)``) for the caller
+        to turn into a ``409`` — no write happened.
+        """
+        digest = canonical_digest(content)
+        with self._lock:
+            current = self._scopes.get(scope)
+            current_token = (
+                RevisionToken(seq=current["seq"], digest=current["digest"])
+                if current else None
+            )
+            if current_token is None or str(current_token) != if_match:
+                conflict = {
+                    "current_revision_token": str(current_token) if current_token else None,
+                    "current_digest_sha256": current_token.digest if current_token else None,
+                    "updated_at": current.get("updated_at") if current else None,
+                    "updated_by": current.get("actor") if current else None,
+                }
+                return current_token or RevisionToken(seq=0, digest=digest), conflict
+            seq = current["seq"] + 1
+            self._scopes[scope] = self._entry(seq, digest, actor)
+            self._save()
+            return RevisionToken(seq=seq, digest=digest), None
+
+    @staticmethod
+    def _entry(seq: int, digest: str, actor: str | None) -> dict[str, Any]:
+        return {
+            "seq": seq,
+            "digest": digest,
+            "actor": actor,
+            "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }
 
     def current(self, scope: str) -> RevisionToken | None:
         """The last observed token of a scope, without observing new content."""
@@ -134,3 +175,41 @@ class TokenStore:
             if current is None:
                 return None
             return RevisionToken(seq=current["seq"], digest=current["digest"])
+
+
+def diff_documents(mine: Any, theirs: Any) -> list[dict[str, Any]]:
+    """Field-level conflict list between a client draft and the server record.
+
+    Pragmatic shallow diff for the 409 payload: top-level keys are compared by
+    canonical digest; ``@graph`` is compared node-by-node (keyed by ``@id``).
+    Each conflict carries both sides so the UI can offer keep-mine/keep-theirs
+    per item; absent sides are ``None``.
+    """
+    conflicts: list[dict[str, Any]] = []
+    if not isinstance(mine, dict) or not isinstance(theirs, dict):
+        if canonical_digest(mine) != canonical_digest(theirs):
+            return [{"field": "(document)", "mine": mine, "theirs": theirs}]
+        return []
+
+    mine_graph = mine.get("@graph") if isinstance(mine.get("@graph"), list) else None
+    theirs_graph = theirs.get("@graph") if isinstance(theirs.get("@graph"), list) else None
+    if mine_graph is not None or theirs_graph is not None:
+        mine_nodes = {n.get("@id", f"#{i}"): n for i, n in enumerate(mine_graph or [])}
+        theirs_nodes = {n.get("@id", f"#{i}"): n for i, n in enumerate(theirs_graph or [])}
+        for node_id in sorted(set(mine_nodes) | set(theirs_nodes)):
+            m = mine_nodes.get(node_id)
+            t = theirs_nodes.get(node_id)
+            if m is not None and t is not None and canonical_digest(m) == canonical_digest(t):
+                continue
+            conflicts.append({
+                "field": f"@graph/{node_id}", "mine": m, "theirs": t,
+            })
+
+    for key in sorted(set(mine) | set(theirs)):
+        if key == "@graph":
+            continue
+        m, t = mine.get(key), theirs.get(key)
+        if key not in mine or key not in theirs or canonical_digest(m) != canonical_digest(t):
+            conflicts.append({"field": key, "mine": m if key in mine else None,
+                              "theirs": t if key in theirs else None})
+    return conflicts

@@ -68,6 +68,7 @@ def test_crate_endpoint(monkeypatch):
 
     graph = jsonld.expand(linked_instance())
     monkeypatch.setattr(fuseki, "project_graph_jsonld", lambda s, pid, c: graph)
+    monkeypatch.setattr(api.crate_store, "load_committed", lambda s, pid, c: None)
 
     class _StubPublisher:
         def publish(self, *args, **kwargs):
