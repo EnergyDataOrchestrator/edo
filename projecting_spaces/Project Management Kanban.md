@@ -52,6 +52,7 @@ kanban-plugin: board
 
 ## Review & Feedback
 
+- [ ] [[2026-11-23_v0.2.0]] Release v0.2.0 — observable bus (CF1-012) + no-demo-data UI (CF1-013) — follow-up verification run planned @{2026-11-23}
 - [ ] [[REV-001]] 12 ● High Level Wiederholung: Skalierbarkeitsanalyse & Lessons Learned @{2027-06-25}
 - [ ] Dissertation advisor review & feedback
 
@@ -70,7 +71,6 @@ kanban-plugin: board
 - [x] [[CF1-012]] Databus ● Kafka-Messages in der UI (Databus-Bridge in socket-ux) @{2026-12-17} @{2026-11-23}
 - [x] [[CF1-013]] No demo data — graceful empty states (Weatherstation removal) @{2026-11-23} @{2026-11-23}
 - [x] [[2026-11-23_v0.1.0]] Release v0.1.0 — first verified end-to-end chain (tags in allen 6 Repos + CHANGELOGs) @{2026-11-23} @{2026-11-23}
-- [x] [[2026-11-23_v0.2.0]] Release v0.2.0 — observable bus (CF1-012) + no-demo-data UI (CF1-013) @{2026-11-23} @{2026-11-23}
 
 
 
