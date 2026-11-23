@@ -214,6 +214,8 @@ def project_crate(pid: str) -> JSONResponse:
     derived = crate_mod.crate_metadata_json(crate)
     metadata = committed if committed is not None else derived
     source = "committed" if committed is not None else "derived"
+    # Digests live on the verbatim crate document (see crate_store): what a
+    # client commits is byte-identical to what GET serves.
     token = token_store().observe(f"fep:crate:{pid}", metadata)
 
     _broker.publish(BusEvent(
@@ -279,7 +281,9 @@ def project_crate_put(pid: str, request: Request, body: dict[str, Any]) -> JSONR
     derived = crate_mod.crate_metadata_json(crate_mod.build_crate(doc, pid))
     current_metadata = committed if committed is not None else derived
     # Make the store reflect the current state (no-op when unchanged) so the
-    # If-Match check compares against what GET would have served.
+    # If-Match check compares against what GET would have served. Digests are
+    # over the verbatim crate document (see crate_store), so commit and GET
+    # observe the same representation.
     token_store().observe(scope, current_metadata)
     new_token, conflict = token_store().commit(scope, body, if_match, actor=actor)
     if conflict is not None:
@@ -293,13 +297,6 @@ def project_crate_put(pid: str, request: Request, body: dict[str, Any]) -> JSONR
     try:
         with httpx.Client(timeout=15.0) as client:
             crate_store.save_committed(settings, pid, body, client)
-    except crate_store.CrateValidationError as exc:
-        # The token advanced on the optimistic check, but the body cannot be
-        # persisted; roll the observed state back so the client may retry.
-        token_store().observe(scope, current_metadata, actor=actor)
-        raise HTTPException(status_code=400, detail={
-            "code": "invalid_crate", "message": str(exc),
-        }) from exc
     except fuseki.FusekiError as exc:
         token_store().observe(scope, current_metadata, actor=actor)
         raise HTTPException(status_code=502, detail=str(exc)) from exc

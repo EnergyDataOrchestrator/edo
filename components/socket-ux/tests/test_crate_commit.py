@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 
 from fastapi.testclient import TestClient
 from pyld import jsonld
@@ -157,37 +158,51 @@ def test_put_forbidden_below_fellow(monkeypatch):
     assert response.json()["detail"]["capability"] == "editCrate"
 
 
-def test_crate_store_roundtrip_with_bundled_context(monkeypatch):
-    """expand -> compact round trip preserves the crate root (offline-safe)."""
-    graph = jsonld.expand(linked_instance())
+class FakeFusekiClient:
+    """Minimal httpx.Client double: records crate writes, answers the SELECT."""
 
-    from socket_ux import crate as crate_mod
-    from socket_ux.internal_format import project_doc
+    def __init__(self, settings):
+        self.settings = settings
+        self.literals = {}
 
-    doc = project_doc(graph, PROJECT_IRI)
-    metadata = crate_mod.crate_metadata_json(crate_mod.build_crate(doc, PROJECT_IRI))
-
-    expanded = pyld_expand(metadata, crate_store.crate_base_iri(PROJECT_IRI))
-    # The stored graph resolves relative ids into the graph IRI space ...
-    assert any(n.get("@id") == f"{crate_store.crate_graph_uri(PROJECT_IRI)}/"
-               for n in expanded)
-    compacted = pyld_compact(expanded, crate_store.crate_base_iri(PROJECT_IRI))
-    # ... and compaction against the same base restores the crate shape.
-    root = next(n for n in compacted["@graph"] if n["@id"] == "./")
-    original = next(n for n in metadata["@graph"] if n["@id"] == "./")
-    assert root["name"] == original["name"]
-    assert compacted["@context"] == crate_store.RO_CRATE_CONTEXT_URL
+    def post(self, url, data=None, params=None, content=None, auth=None, headers=None):
+        if url == self.settings.dataset_query_url:
+            match = re.search(r"GRAPH <([^>]+)>", (data or {}).get("query", ""))
+            literal = self.literals.get(match.group(1)) if match else None
+            bindings = [] if literal is None else [{"json": {"value": literal}}]
+            return _FakeResponse(200, {"results": {"bindings": bindings}})
+        document = json.loads(content)
+        self.literals[params["graph"]] = document[crate_store.CRATE_JSON_PREDICATE]
+        return _FakeResponse(201, {})
 
 
-def pyld_expand(document, base):
-    import pyld.jsonld
+class _FakeResponse:
+    def __init__(self, status_code, payload):
+        self.status_code = status_code
+        self._payload = payload
 
-    crate_store._ensure_loader()
-    return pyld.jsonld.expand(document, options={"base": base})
+    def json(self):
+        return self._payload
 
 
-def pyld_compact(expanded, base):
-    import pyld.jsonld
+def test_crate_store_verbatim_roundtrip():
+    """save -> load preserves the crate document exactly — custom terms too.
 
-    return pyld.jsonld.compact(
-        expanded, crate_store.RO_CRATE_CONTEXT_REF, options={"base": base})
+    The committed crate is stored verbatim (one ``edo:crateJson`` literal):
+    expansion-based storage was rejected because pyld drops every property
+    outside the RO-Crate context (``observes``, arbitrary NovaCrate edits).
+    """
+    settings = FakeAdminSettings()
+    client = FakeFusekiClient(settings)
+    metadata = {
+        "@context": "https://w3id.org/ro/crate/1.1/context",
+        "@graph": [
+            {"@id": "./", "@type": "Dataset", "name": "x",
+             "observes": {"@id": "urn:uuid:some-property"},
+             "customProp": "kept verbatim"},
+        ],
+    }
+
+    assert crate_store.load_committed(settings, PROJECT_IRI, client) is None
+    crate_store.save_committed(settings, PROJECT_IRI, metadata, client)
+    assert crate_store.load_committed(settings, PROJECT_IRI, client) == metadata
