@@ -27,6 +27,8 @@ INTERNAL_CONTEXT: dict[str, Any] = {
     "time": "http://www.w3.org/2006/time#",
     "sosa": "http://www.w3.org/ns/sosa/",
     "smscv": "https://sms-cv.helmholtz.cloud/sms/cv/api/v1/",
+    # published data-file columns (UPL-004 Stage 2, decision A)
+    "csvw": "http://www.w3.org/ns/csvw#",
 }
 
 

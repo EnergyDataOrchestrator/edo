@@ -79,8 +79,20 @@ right-most columns:
 | P8 | `contributor.role_template` (free text) | Contribution `dcterms:type` (RDA maDMP contributor-type CV) | `literal-transformation` (free text → CV lookup, Property-Level) | translate | default `Other` (unmapped template) |
 | P9 | `cost[]` | Project `edo:hasCost` → **Cost** nodes | `nesting` (Structural) | n/a | omit |
 
-> **Lost (Project):** funder (`dmp/project/funder`), grant id, and the RDMO
-> `role_template` free text itself are not carried into the v0.2 Project class.
+> **Lost (Project):** the RDMO `role_template` free text itself is not carried
+> into the v0.2 Project class (only its CV translation, P8). Since the
+> CF2-004 v0.2 follow-up the funder/grant information **is** carried
+> (P43–P47) — schema and map extended accordingly.
+
+### Funding / Funder class (from `dmp/funding`)
+
+| # | Source (maDMP) | Target (internal) | Pattern (Category) | 1:1? | Missing → |
+|---|---|---|---|---|---|
+| P43 | `funding[]` | Project `edo:hasFunding` → **Funding** nodes | `nesting` (Structural) | n/a | omit (funding optional; not yet exported by the plugin) |
+| P44 | `funding/funder/name` | Funding `edo:funder` → **Funder** node `foaf:name` | `nesting` (Structural) + `direct-property-mapping` per field | 1:1 | omit (funder without name) |
+| P45 | `funding/funder/funder_id` | Funder `edo:identifier` → **Identifier** node (`fundref`/`url`/`other` CV) | `nesting` (Structural) + `direct-property-mapping` (CV) | 1:1 (CV type) | omit |
+| P46 | `funding/grantId[]` | Funding `edo:grantId` → **Identifier** nodes | `nesting` (Structural) | n/a | omit |
+| P47 | `funding/funding_status` | Funding `edo:fundingStatus` (planned / applied / granted / rejected) | `direct-property-mapping` (Property-Level) | 1:1 | omit (optional) |
 
 ### Person class (contact / contributor agent)
 
@@ -202,6 +214,35 @@ right-most columns:
 > URIs (S7–S15); SMS `label` and any `status` are not carried. The datasheet
 > overrides for range / accuracy / resolution (S10–S12) supercede the (sometimes
 > contradictory, sometimes null) SMS values per CF1-005.
+
+## Columns → Internes Format (UPL-004 Stage 2, decision A)
+
+Source: the **columns manifest** written by the data-file publisher
+(`data/regimo-core/columns/<project_id>/columns.json`, OEMetadata v2
+`schema.fields` verbatim subset, `type` renamed to `datatype`). The engine loads
+it per project (`REGIMO_COLUMNS_EXTRAS`), passes it to the transform, and it
+participates in the change digest (a manifest change re-transforms). Rule C6
+(matching) is tool-side, like the SMS envelope unwrapping.
+
+Map file: `columns-to-internal.linkml-map.yaml` (schema
+`05_P05_S05_columns-schema.yaml` → target class `Column`, class_uri
+`csvw:Column`).
+
+| # | Source (manifest) | Target (internal) | Pattern (Category) | 1:1? | Missing → |
+|---|---|---|---|---|---|
+| C1 | `columns[]/name` | Column `csvw:name` (required key of `Column`) | `direct-property-mapping` (Property-Level) | 1:1 | omit (nameless column) |
+| C2 | `columns[]/datatype` | Column `csvw:datatype` | `direct-property-mapping` (`expr: datatype or None`) | 1:1 | omit |
+| C3 | `columns[]/unit` | Column `edo:unit` (**string** — OEMetadata unit codes like "KW", not CV IRIs; documented divergence from `MeasuredProperty.unit`'s uriorcurie) | `direct-property-mapping` | 1:1 | omit |
+| C4 | `columns[]/description` | Column `dcterms:description` | `direct-property-mapping` | 1:1 | omit |
+| C5 | `columns[]/nullable` | Column `edo:nullable` (boolean; fallback predicate `edo:nullable` via the serializer's lowerCamel default) | `direct-property-mapping` | 1:1 | omit |
+| C6 | manifest entry → maDMP dataset | Dataset `edo:hasColumn` → **Column[]** | tool-side matching (outside the map), priority: `dataset_id` (dcterms:identifier) → `dataset_title` (dcterms:title) → order fallback (only when the manifest covers every dataset of the project, with warning) | n/a | entry skipped with a warning — never force-attached (CF1-013: no fabricated data) |
+
+> **Notes (Columns):** the vocabulary is **W3C CSVW** (`csvw:Column`,
+> `csvw:name`, `csvw:datatype`) linked via the minted `edo:hasColumn` —
+> consistent with the `edo:hasFunding` practice. Unmatched manifest entries are
+> skipped with a warning, never attached to a guessed dataset (CF1-013).
+> SHACL safety: `project-claim-shapes.ttl` has no `sh:closed`, so the new
+> predicates do not break validation.
 
 ## R4 / neue Klassen (MeasurementSeries, SamplingPlan) — keine maschinenlesbare Quelle
 
