@@ -23,8 +23,6 @@ kanban-plugin: board
 - [ ] [[CF1-002]] Implement the [[Databus]] within Pigeon / [[Search subject]] function
 - [ ] [[CF1-008]] 06a ● maDMP Kostenabbildung (Group 5, 18 `project/costs/**`) @{2027-01-08}
 - [ ] [[CF1-009]] 06b ● maDMP Restabbildung (Group 6, ~49 answered-but-unmapped values) @{2027-01-22}
-- [ ] [[CF1-012]] Databus ● Kafka-Messages in der UI (Databus-Bridge in socket-ux) @{2026-12-17}
-- [ ] [[CF1-013]] No demo data — graceful empty states (Weatherstation removal) @{2026-11-23}
 
 
 ## CF2 — Present Information in Suitable Form
@@ -69,7 +67,10 @@ kanban-plugin: board
 - [x] [[CF1-007]] 05 ● LinkML Beschreibung (DMP, SMS, internes Format) @{2027-01-15} @{2026-11-19}
 - [x] [[CF2-007]] F1 ● hasContact SHACL-Entscheidung @{2027-03-26} @{2026-11-23}
 - [x] [[CF1-011]] edo-infra ● Definitionen für das Infrastruktur-Script-Modul @{2026-11-22} @{2026-11-23}
+- [x] [[CF1-012]] Databus ● Kafka-Messages in der UI (Databus-Bridge in socket-ux) @{2026-12-17} @{2026-11-23}
+- [x] [[CF1-013]] No demo data — graceful empty states (Weatherstation removal) @{2026-11-23} @{2026-11-23}
 - [x] [[2026-11-23_v0.1.0]] Release v0.1.0 — first verified end-to-end chain (tags in allen 6 Repos + CHANGELOGs) @{2026-11-23} @{2026-11-23}
+- [x] [[2026-11-23_v0.2.0]] Release v0.2.0 — observable bus (CF1-012) + no-demo-data UI (CF1-013) @{2026-11-23} @{2026-11-23}
 
 
 
