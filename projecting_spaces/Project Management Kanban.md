@@ -54,6 +54,8 @@ kanban-plugin: board
 
 - [ ] [[UPL-001]] UI Uplift ● Optimistische Nebenläufigkeitskontrolle (Revision Tokens, If-Match/409, SSE-Invalidation) @{2027-01-15}
 - [ ] [[UPL-002]] UI Uplift ● RBAC — Rollen guest/fellow/steward/admin über alle Domains @{2027-02-12}
+- [ ] [[UPL-003]] UI Uplift ● CCA-Workbench — Datenseeds + NovaCrate-Highlight-Verknüpfung @{2027-02-12}
+- [ ] [[UPL-004]] UI Uplift ● CCA Spalten- & Zell-Ebene — Seeds, Eigentum & Review-Workflow @{2027-02-12}
 
 
 ## Review & Feedback
