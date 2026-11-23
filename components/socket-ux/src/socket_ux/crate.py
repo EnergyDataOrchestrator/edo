@@ -64,6 +64,24 @@ def _first_text(items: Any, *keys: str) -> str:
     return ""
 
 
+def _nodes(value: Any) -> list[dict[str, Any]]:
+    """Property values normalized to a list of node objects — compact JSON-LD
+    renders a one-element list as the bare node, and iterating a dict would
+    yield its keys, not its values."""
+    if value is None:
+        return []
+    items = value if isinstance(value, list) else [value]
+    return [d for d in items if isinstance(d, dict)]
+
+
+def _texts(value: Any) -> list[str]:
+    """Property values normalized to a list of plain strings."""
+    if value is None:
+        return []
+    items = value if isinstance(value, list) else [value]
+    return [t for t in items if isinstance(t, str)]
+
+
 def _expand_smscv(value: str) -> str:
     if value.startswith("smscv:"):
         return f"{SMSCV}{value.split(':', 1)[1]}"
@@ -74,39 +92,64 @@ def _license_name(uri: str) -> str:
     return _LICENSE_NAMES.get(uri) or uri.rstrip("/").rsplit("/", 1)[-1]
 
 
+def _datasets(project: dict[str, Any]) -> list[dict[str, Any]]:
+    """The dcat:dataset nodes, normalized to a list — compact JSON-LD renders
+    a single dataset as a dict and several datasets as a list."""
+    value = _val(project, "dcat:dataset")
+    items = value if isinstance(value, list) else [value]
+    return [d for d in items if isinstance(d, dict)]
+
+
+def _boolean(obj: Any, key: str) -> bool | None:
+    """edo:personalData / edo:sensitiveData — plain bool or xsd:boolean literal."""
+    value = _val(obj, key)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, dict) and "@value" in value:
+        text = _text(value["@value"]).lower()
+        if text in ("true", "false"):
+            return text == "true"
+    return None
+
+
+def _format_id(value: Any) -> str:
+    """dcat:format — plain string, node object or a one-element list."""
+    if isinstance(value, list):
+        return _format_id(value[0]) if value else ""
+    return _text(value)
+
+
 def build_crate(doc: dict[str, Any], project_iri: str) -> ROCrate:
     """Build the RO-Crate from a compact internal-format document.
 
-    Returns the ``rocrate`` object; use ``crate.metadata.generate()`` for the
+    Every ``dcat:dataset`` becomes its own Dataset entity (with its
+    distributions as MediaObject entities) so downstream views (CCA) have
+    per-dataset highlight targets in the NovaCrate editor (UPL-003). Returns
+    the ``rocrate`` object; use ``crate.metadata.generate()`` for the
     ``ro-crate-metadata.json`` content.
     """
     project = _as_dict(doc)
     project_title = _first_text(project, "dcterms:title")
 
-    dataset = _as_dict(_val(project, "dcat:dataset"))
-    ds_id = _first_text(dataset, "@id") or project_iri
-    ds_title = _first_text(dataset, "dcterms:title") or "Dataset"
-    ds_description = _first_text(dataset, "dcterms:description")
-    keywords = _val(dataset, "dcat:keyword") or []
+    datasets = _datasets(project)
+    first = datasets[0] if datasets else {}
+    multi = len(datasets) > 1
+    ds_title = _first_text(first, "dcterms:title") or "Dataset"
+    ds_description = _first_text(first, "dcterms:description")
 
-    # license (first distribution that carries one); the value may be a plain
-    # string, a node object ({"@id": ...}) or nested ("dcterms:license": ...)
+    # license (first distribution of any dataset that carries one); the value
+    # may be a plain string, a node object ({"@id": ...}) or nested
+    # ("dcterms:license": ...)
     license_uri = None
-    for dist in _val(dataset, "dcat:distribution") or []:
-        lic = _as_dict(_val(dist, "edo:license"))
-        raw = _val(lic, "dcterms:license")
-        if isinstance(raw, dict):
-            raw = raw.get("@id") or raw.get("@value")
-        lu = _text(raw)
-        if lu:
-            license_uri = lu
-
-    # sensor + measured properties (the DMP-SMS link, CF2-005)
-    sensor = _as_dict(_val(dataset, "prov:wasGeneratedBy"))
-    sensor_id = _first_text(sensor, "@id")
-    sensor_title = _first_text(sensor, "dcterms:title")
-    sensor_pid = _first_text(_as_dict(_val(sensor, "edo:identifier")), "dcterms:identifier")
-    props = [_as_dict(p) for p in (_val(sensor, "sosa:observes") or [])]
+    for ds in datasets:
+        for dist in _nodes(_val(ds, "dcat:distribution")):
+            lic = _as_dict(_val(dist, "edo:license"))
+            raw = _val(lic, "dcterms:license")
+            if isinstance(raw, dict):
+                raw = raw.get("@id") or raw.get("@value")
+            lu = _text(raw)
+            if lu:
+                license_uri = lu
 
     # contact
     contact = _as_dict(_val(project, "edo:hasContact"))
@@ -126,15 +169,31 @@ def build_crate(doc: dict[str, Any], project_iri: str) -> ROCrate:
     # nothing has been published here — the crate is derived on every GET and
     # a moving timestamp would churn the OCC revision token (UPL-001).
     del root["datePublished"]
-    root["name"] = ds_title
-    root["description"] = ds_description or (
-        f"RO-Crate of the EDO internal-format instance '{ds_title}' "
-        f"(linked DMP + SMS) for the project '{project_title}'."
-    )
+    root["name"] = ds_title if not multi else (project_title or ds_title)
+    if multi:
+        fallback_description = (
+            f"RO-Crate of the EDO internal-format instance for the project "
+            f"'{project_title}' (linked DMP + SMS)."
+            if project_title
+            else "RO-Crate of the EDO internal-format instance (linked DMP + SMS)."
+        )
+    else:
+        fallback_description = (
+            f"RO-Crate of the EDO internal-format instance '{ds_title}' "
+            f"(linked DMP + SMS) for the project '{project_title}'."
+        )
+    root["description"] = fallback_description if multi else (ds_description or fallback_description)
     root["isBasedOn"] = {"@id": project_iri}
     root["conformsTo"] = {"@id": SCHEMA_IRI}
+
+    # keywords: union over all datasets, first occurrence order, no duplicates
+    keywords: list[str] = []
+    for ds in datasets:
+        for k in _texts(_val(ds, "dcat:keyword")):
+            if k not in keywords:
+                keywords.append(k)
     if keywords:
-        root["keywords"] = [k for k in keywords if isinstance(k, str)]
+        root["keywords"] = keywords
 
     if license_uri:
         crate.add_jsonld({
@@ -149,6 +208,12 @@ def build_crate(doc: dict[str, Any], project_iri: str) -> ROCrate:
     # here — the crate is derived on every GET, a fabricated timestamp would
     # make the derivation non-deterministic and churn the OCC revision token
     # (UPL-001). Real dates enter when a crate is committed.
+    action_object = (
+        [{"@id": _first_text(ds, "@id") or f"#dataset-{i}"}
+         for i, ds in enumerate(datasets, start=1)]
+        if multi
+        else {"@id": _first_text(first, "@id") or project_iri}
+    )
     crate.add_jsonld({
         "@id": "#generate-action",
         "@type": "CreateAction",
@@ -157,32 +222,97 @@ def build_crate(doc: dict[str, Any], project_iri: str) -> ROCrate:
             "Generated on request by the socket-ux API from the project graph "
             "in the internal database (Fuseki /projects)."
         ),
-        "object": {"@id": ds_id},
+        "object": action_object,
         "result": {"@id": "./"},
     })
     root["prov:wasGeneratedBy"] = {"@id": "#generate-action"}
 
-    # sensor contextual entity + measured properties
-    if sensor_id or sensor_title:
-        crate.add_jsonld({
-            "@id": sensor_id or "#sensor",
-            "@type": "sosa:Sensor",
-            "name": sensor_title or "Sensor",
-            "identifier": sensor_pid or sensor_id,
-        })
-        root["prov:wasGeneratedBy"] = {"@id": sensor_id or "#sensor"}
-        for i, prop in enumerate(props, start=1):
+    # per-dataset entities (UPL-003): each dcat:dataset with its title,
+    # description, keywords, identifier, personal/sensitive flags and its
+    # distributions (MediaObject) — the CCA highlight targets.
+    for i, ds in enumerate(datasets, start=1):
+        ds_id = _first_text(ds, "@id") or f"#dataset-{i}"
+        entity: dict[str, Any] = {
+            "@id": ds_id,
+            "@type": "Dataset",
+            "name": _first_text(ds, "dcterms:title") or f"Dataset {i}",
+        }
+        description = _first_text(ds, "dcterms:description")
+        if description:
+            entity["description"] = description
+        ds_keywords = _texts(_val(ds, "dcat:keyword"))
+        if ds_keywords:
+            entity["keywords"] = ds_keywords
+        identifier = _first_text(_as_dict(_val(ds, "edo:identifier")), "dcterms:identifier")
+        if identifier:
+            entity["identifier"] = identifier
+        for flag_key in ("edo:personalData", "edo:sensitiveData"):
+            flag = _boolean(ds, flag_key)
+            if flag is not None:
+                entity[flag_key] = flag
+
+        distribution_refs = []
+        for j, dist in enumerate(_nodes(_val(ds, "dcat:distribution")), start=1):
+            dist_id = _first_text(dist, "@id") or f"#distribution-{i}-{j}"
+            dist_ent: dict[str, Any] = {
+                "@id": dist_id,
+                "@type": "MediaObject",
+                "name": _first_text(dist, "dcterms:title") or f"Distribution {j}",
+            }
+            fmt = _format_id(_val(dist, "dcat:format"))
+            if fmt:
+                dist_ent["encodingFormat"] = fmt
+            access_url = _first_text(dist, "dcat:accessURL")
+            if access_url:
+                dist_ent["contentUrl"] = access_url
+            data_access = _first_text(dist, "edo:dataAccess")
+            if data_access:
+                dist_ent["edo:dataAccess"] = data_access
+            crate.add_jsonld(dist_ent)
+            distribution_refs.append({"@id": dist_id})
+        if distribution_refs:
+            entity["distribution"] = distribution_refs
+
+        crate.add_jsonld(entity)
+        root.append_to("hasPart", {"@id": ds_id})
+
+    # sensor contextual entities + measured properties (the DMP-SMS link,
+    # CF2-005) — deduplicated across datasets, root observes the union.
+    sensor_ids: set[str] = set()
+    prop_counter = 0
+    for i, ds in enumerate(datasets, start=1):
+        sensor = _as_dict(_val(ds, "prov:wasGeneratedBy"))
+        sensor_id = _first_text(sensor, "@id")
+        sensor_title = _first_text(sensor, "dcterms:title")
+        if not sensor_id and not sensor_title:
+            continue
+        sensor_key = sensor_id
+        if not sensor_key:
+            sensor_key = "#sensor" if "#sensor" not in sensor_ids else f"#sensor-{i}"
+        if sensor_key not in sensor_ids:
+            sensor_ids.add(sensor_key)
+            sensor_pid = _first_text(_as_dict(_val(sensor, "edo:identifier")),
+                                     "dcterms:identifier")
+            crate.add_jsonld({
+                "@id": sensor_key,
+                "@type": "sosa:Sensor",
+                "name": sensor_title or "Sensor",
+                "identifier": sensor_pid or sensor_key,
+            })
+            root["prov:wasGeneratedBy"] = {"@id": sensor_key}
+        for prop in _nodes(_val(sensor, "sosa:observes")):
+            prop_counter += 1
             quantity = _expand_smscv(_text(_val(prop, "smscv:measuredQuantity")))
             name = _first_text(prop, "dcterms:title") or quantity
-            prop_id = quantity or f"#measured-property-{i}"
-            entity: dict[str, Any] = {
+            prop_id = quantity or f"#measured-property-{prop_counter}"
+            prop_entity: dict[str, Any] = {
                 "@id": prop_id,
                 "@type": "sosa:ObservableProperty",
                 "name": name,
             }
             if quantity:
-                entity["identifier"] = quantity
-            crate.add_jsonld(entity)
+                prop_entity["identifier"] = quantity
+            crate.add_jsonld(prop_entity)
             root.append_to("observes", {"@id": prop_id})
 
     if contact_name:

@@ -118,3 +118,74 @@ def test_build_crate_provenance_and_contact():
     contact = graph["#contact"]
     assert contact["name"] == "A. Koubaa"
     assert root["creator"]["@id"] == "#contact"
+
+
+def test_build_crate_per_dataset_entities():
+    """Single-dataset form: the dcat:dataset becomes a Dataset entity with its
+    distributions as MediaObject entities (UPL-003, CCA highlight targets)."""
+    doc = linked_instance()
+    crate = crate_mod.build_crate(doc, PROJECT_IRI)
+    metadata = crate_mod.crate_metadata_json(crate)
+    graph = _graph(metadata)
+
+    ds = graph[DATASET_ID]
+    assert ds["@type"] == "Dataset"
+    assert ds["name"] == "Weatherstation Q3-2026"
+    assert ds["keywords"] == ["Energy", "Orchestrator"]
+    assert ds["edo:personalData"] is False
+    assert ds["edo:sensitiveData"] is False
+    assert graph["./"]["hasPart"] == [{"@id": DATASET_ID}]
+
+    dists = ds["distribution"]
+    assert len(dists) == 2
+    storage = graph[dists[0]["@id"]]
+    assert storage["@type"] == "MediaObject"
+    assert storage["name"] == "Storage during the project"
+    assert storage["encodingFormat"] == "http://purl.org/NET/mediatypes/text/csv"
+    assert storage["contentUrl"] == "https://gitlab.kit.edu/kit/iai/it4edm/metadb"
+    assert storage["edo:dataAccess"] == "open"
+
+
+def test_build_crate_multiple_datasets():
+    """List form (RDMO projects with several datasets): one Dataset entity per
+    dcat:dataset, distributions attached, root carries the project title and
+    the union of the keywords; the generate action covers all datasets."""
+    second = {
+        "@id": "edo:dataset:second",
+        "@type": "dcat:Dataset",
+        "dcterms:title": "Second dataset",
+        "dcat:keyword": ["Orchestrator", "Extra"],
+        "edo:sensitiveData": True,
+        "dcat:distribution": [
+            {"@type": "dcat:Distribution", "dcterms:title": "Dist B"},
+        ],
+    }
+    doc = linked_instance()
+    doc["dcat:dataset"] = [doc["dcat:dataset"], second]
+    crate = crate_mod.build_crate(doc, PROJECT_IRI)
+    metadata = crate_mod.crate_metadata_json(crate)
+    graph = _graph(metadata)
+
+    root = graph["./"]
+    assert root["name"] == "Measurement_02"  # project title wins with >1 dataset
+    assert root["keywords"] == ["Energy", "Orchestrator", "Extra"]
+    assert root["hasPart"] == [
+        {"@id": DATASET_ID},
+        {"@id": "edo:dataset:second"},
+    ]
+
+    second_ent = graph["edo:dataset:second"]
+    assert second_ent["name"] == "Second dataset"
+    assert second_ent["edo:sensitiveData"] is True
+    assert "edo:personalData" not in second_ent
+    dist_b = graph[second_ent["distribution"][0]["@id"]]
+    assert dist_b["name"] == "Dist B"
+
+    action = graph["#generate-action"]
+    assert action["object"] == [
+        {"@id": DATASET_ID},
+        {"@id": "edo:dataset:second"},
+    ]
+
+    # the sensor of the first dataset is still linked (DMP-SMS link)
+    assert root["prov:wasGeneratedBy"]["@id"] == SENSOR_ID
