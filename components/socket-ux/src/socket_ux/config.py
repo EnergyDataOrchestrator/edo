@@ -25,6 +25,9 @@ class Settings:
     ``BUS_BUFFER_SIZE``   — per-topic ring-buffer capacity of the REST bridge
     ``ONTOLOGY_PATH``   — path to the ontology (regimo.ttl); used for the
                           ``ontology_uri`` message header
+    ``EDO_ROLE``        — RBAC role this instance serves under
+                          (guest/fellow/steward/admin, default ``guest``;
+                          dev compose sets ``steward`` — card UPL-002)
     """
 
     fuseki_url: str = field(default_factory=lambda: _env("FUSEKI_URL", "http://localhost:3031"))
@@ -35,6 +38,9 @@ class Settings:
     kafka_topic_pattern: str = field(default_factory=lambda: _env("KAFKA_TOPIC_PATTERN", "^edo\\."))
     bus_buffer_size: int = field(default_factory=lambda: int(_env("BUS_BUFFER_SIZE", "100") or 100))
     ontology_path: str = field(default_factory=lambda: _env("ONTOLOGY_PATH"))
+    # Safe default; the dev compose sets EDO_ROLE=steward (UPL-002 sub-decision:
+    # steward for local/dev profiles, guest for production).
+    role: str = field(default_factory=lambda: _env("EDO_ROLE", "guest"))
 
     @property
     def dataset_query_url(self) -> str:

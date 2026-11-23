@@ -7,6 +7,9 @@ The API the vue-frontend talks to:
 * ``GET /api/v1/projects/{pid}/values`` — full internal-format document
 * ``GET /api/v1/projects/{pid}/crate``  — RO-Crate metadata for NovaCrate
 * ``GET /api/v1/events``               — SSE stream of databus project events
+* ``GET /api/v1/whoami``               — the RBAC role this instance serves under (EDO_ROLE)
+* ``GET /api/v1/bus/…``                — databus REST bridge / live tracker (steward+,
+                                         POST publish admin) — card UPL-002
 
 ``pid`` is the URL-encoded project IRI from the internal database.
 """
@@ -26,6 +29,7 @@ from pydantic import BaseModel
 
 from . import crate as crate_mod
 from . import fuseki
+from . import auth
 from .bus import CRATE_TOPIC, SOCKET_ID, BusPublisher, MessageHeader, ORDERED_HEADER_KEYS, ontology_uri_from_path
 from .config import get_settings
 from .databus import DatabusStore, broker_online, list_topics
@@ -53,6 +57,9 @@ def broker() -> EventBus:
 async def _lifespan(_: FastAPI):
     global _subscriber
     settings = get_settings()
+    # Fail fast on a misconfigured EDO_ROLE (UPL-002) instead of serving
+    # everything under a silently mis-parsed role.
+    auth.instance_role(settings)
     _broker.attach_loop(asyncio.get_running_loop())
     _subscriber = subscriber_from_settings(
         _broker, settings.kafka_bootstrap_servers,
@@ -91,6 +98,26 @@ def healthz() -> dict[str, Any]:
     except Exception:
         fuseki_ok = False
     return {"status": "ok", "fuseki": "up" if fuseki_ok else "unreachable"}
+
+
+# -- RBAC (UPL-002, option B): per-instance role + capability enforcement -----
+
+
+@app.get("/api/v1/whoami")
+def whoami() -> dict[str, Any]:
+    """The role this instance serves under, for the frontends' role display.
+
+    The UI may only *narrow* its locally chosen role against this value — the
+    instance role is the ceiling. Mutating endpoints answer
+    ``403 {required_role, ...}`` per the card's server-side-mirror invariant.
+    """
+    settings = get_settings()
+    role = auth.instance_role(settings)
+    return {
+        "role": role,
+        "source": "EDO_ROLE",
+        "capabilities": auth.capabilities_for(role),
+    }
 
 
 def _client(settings) -> "httpx.Client":  # noqa: F821 — typing kept lean
@@ -247,8 +274,10 @@ async def bus_events(request: Request) -> StreamingResponse:
     Each message is emitted as ``event: bus.message`` with the complete bridge
     shape (topic, payload, header, partition, offset, broker timestamp), so
     the front end can append it live to the selected topic's view. The same
-    keep-alive/retry conventions as ``/api/v1/events`` apply.
+    keep-alive/retry conventions as ``/api/v1/events`` apply. Diagnostics —
+    gated to ``viewDiagnostics`` (steward+) like the bus bridge.
     """
+    auth.require_capability("viewDiagnostics", get_settings())
 
     async def stream():
         queue = _broker.subscribe()
@@ -290,6 +319,7 @@ def _broker_servers() -> str:
 @app.get("/api/v1/bus/topics")
 def bus_topics() -> dict[str, Any]:
     """Topics of the broker as ``{"topics": [{name, partitions}]}``."""
+    auth.require_capability("viewDiagnostics", get_settings())
     servers = _broker_servers()
     if not servers:
         raise HTTPException(status_code=503, detail="no databus configured (KAFKA_BOOTSTRAP_SERVERS unset)")
@@ -307,6 +337,7 @@ def bus_messages(topic: str, limit: int = Query(default=20, ge=1, le=100)) -> li
     Bare JSON array — that is what ``recentMessages()`` in ``databus.ts``
     expects. Headers are shown verbatim per the 6-header contract.
     """
+    auth.require_capability("viewDiagnostics", get_settings())
     return [m.as_api() for m in _databus.recent(topic, limit)]
 
 
@@ -326,6 +357,7 @@ def bus_publish(topic: str, body: BusPublishBody) -> dict[str, Any]:
     recent messages without waiting for the consumer round trip (the store
     de-duplicates the consumer's own copy).
     """
+    auth.require_capability("manageSystem", get_settings())
     missing = [key for key in ORDERED_HEADER_KEYS if key not in body.header]
     if missing:
         raise HTTPException(
@@ -349,7 +381,11 @@ def bus_publish(topic: str, body: BusPublishBody) -> dict[str, Any]:
 
 @app.get("/api/v1/bus/status")
 def bus_status() -> dict[str, Any]:
-    """Bridge status: broker reachability, subscriber, per-topic buffer fill."""
+    """Bridge status: broker reachability, subscriber, per-topic buffer fill.
+
+    Diagnostics — gated to ``viewDiagnostics`` (steward+) like the bus bridge.
+    """
+    auth.require_capability("viewDiagnostics", get_settings())
     servers = _broker_servers()
     return {
         "online": broker_online(servers),

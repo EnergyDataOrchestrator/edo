@@ -78,7 +78,8 @@ def test_parse_kafka_message_survives_missing_bookkeeping():
 
 class FakeSettings(Settings):
     def __init__(self) -> None:
-        super().__init__(kafka_bootstrap_servers="localhost:9092")
+        # admin: these tests exercise the bus bridge itself, above every gate
+        super().__init__(kafka_bootstrap_servers="localhost:9092", role="admin")
 
 
 def test_bus_topics_endpoint(monkeypatch):
@@ -96,7 +97,7 @@ def test_bus_topics_endpoint(monkeypatch):
 def test_bus_topics_endpoint_offline_answers_503(monkeypatch):
     class NoBusSettings(Settings):
         def __init__(self) -> None:
-            super().__init__(kafka_bootstrap_servers="")
+            super().__init__(kafka_bootstrap_servers="", role="admin")
 
     monkeypatch.setattr(api, "get_settings", NoBusSettings)
     client = TestClient(api.app)
@@ -115,7 +116,8 @@ def test_bus_topics_endpoint_unreachable_broker_answers_503(monkeypatch):
     assert client.get("/api/v1/bus/topics").status_code == 503
 
 
-def test_bus_messages_endpoint_serves_buffered_messages():
+def test_bus_messages_endpoint_serves_buffered_messages(monkeypatch):
+    monkeypatch.setattr(api, "get_settings", FakeSettings)
     api._databus.record(StoredMessage(
         topic="edo.test.v1",
         payload={"dmp": {"title": "maDMP for Semantico"}},
@@ -217,7 +219,8 @@ def test_format_bus_sse_ships_the_full_message_shape():
     assert (data["partition"], data["offset"], data["timestamp"]) == (1, 3, "2026-11-23T00:00:00+00:00")
 
 
-def test_bus_events_endpoint_negotiates_event_stream():
+def test_bus_events_endpoint_negotiates_event_stream(monkeypatch):
+    monkeypatch.setattr(api, "get_settings", FakeSettings)
     client = TestClient(api.app)
     with client.stream("GET", "/api/v1/bus/events") as response:
         assert response.status_code == 200

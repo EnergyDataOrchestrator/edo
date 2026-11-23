@@ -20,14 +20,36 @@ vue-frontend ──HTTP──> socket-ux ──SPARQL──> Fuseki /projects (i
 | `GET /api/v1/projects/{pid}/values` | Full internal-format document (compact JSON-LD) of one project |
 | `GET /api/v1/projects/{pid}/crate` | RO-Crate metadata JSON for one project, ready for NovaCrate |
 | `GET /api/v1/events` | SSE stream of databus project events (live refresh of the drawer) |
-| `GET /api/v1/bus/topics` | Topics of the Kafka broker (REST bridge, CF1-012) |
+| `GET /api/v1/whoami` | The RBAC role this instance serves under (`EDO_ROLE`) + its capabilities |
+| `GET /api/v1/bus/topics` | Topics of the Kafka broker (REST bridge, CF1-012) — **steward+** |
 | `GET /api/v1/bus/topics/{topic}/messages?limit=N` | Last N messages of one topic (ring buffer, 6-header contract verbatim) |
-| `POST /api/v1/bus/topics/{topic}/messages` | Publish `{payload, header}` to a topic (6-header contract validated) |
-| `GET /api/v1/bus/status` | Broker reachability, subscriber state, per-topic buffer fill |
-| `GET /api/v1/bus/events` | SSE live feed of every bus message (full bridge shape) — the Databus view's live tracker |
+| `POST /api/v1/bus/topics/{topic}/messages` | Publish `{payload, header}` to a topic (6-header contract validated) — **admin** |
+| `GET /api/v1/bus/status` | Broker reachability, subscriber state, per-topic buffer fill — **steward+** |
+| `GET /api/v1/bus/events` | SSE live feed of every bus message (full bridge shape) — the Databus view's live tracker — **steward+** |
 
 `{pid}` is the URL-encoded project IRI from the internal database, e.g.
 `urn%3Auuid%3Ad9e575a1-...`.
+
+### RBAC — per-instance role (UPL-002, option B)
+
+socket-ux is the **server-side gate** for the edo RBAC matrix: every instance
+serves under exactly one role (`EDO_ROLE`; default `guest`, the dev compose
+sets `steward`). Requests exercising a capability above that role answer
+`403 {code, capability, required_role, instance_role}` — the real
+enforcement behind the UI's capability matrix
+(`vue-frontend/src/lib/capabilities.ts`, mirrored in `auth.py` `MIN_ROLE`).
+
+- Reads (`projects`, `values`, `crate`, `events`, `whoami`): all roles.
+- Bus diagnostics (`/api/v1/bus/*` GET + SSE): `viewDiagnostics` → **steward+**.
+- Bus publish (`POST /api/v1/bus/topics/{topic}/messages`):
+  `manageSystem` → **admin**.
+- Capabilities without endpoints yet (`triggerAdpSync`, `confirmCcaMapping`,
+  `depositPublish`, …) are already encoded in the matrix so new endpoints
+  reuse it.
+
+Frontends may only *narrow* their locally chosen role against `whoami` — the
+instance role is the ceiling. The staged transport decision (option A: OIDC
+claims) replaces the role *source* later; the capability checks stay.
 
 ### Ontology awareness
 
@@ -98,6 +120,7 @@ the packaged graph file remains in `fuseki-proto`.
 | `KAFKA_BOOTSTRAP_SERVERS` | *(unset)* | Databus for ontology-aware events (optional) |
 | `KAFKA_TOPIC_PATTERN` | `^edo\.` | Subscription regex of the bridge consumer (CF1-012) |
 | `BUS_BUFFER_SIZE` | `100` | Per-topic ring-buffer capacity of the REST bridge |
+| `EDO_ROLE` | `guest` | RBAC role of this instance (guest/fellow/steward/admin; dev compose sets `steward`) |
 | `ONTOLOGY_PATH` | *(unset)* | Path to `regimo.ttl`; source of the `ontology_uri` header |
 
 ## Run
