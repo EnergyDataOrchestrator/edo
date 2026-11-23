@@ -78,9 +78,9 @@ services:
       FUSEKI_DATASET: "projects"
       FUSEKI_USER: "admin"
       FUSEKI_PASSWORD: "edo-proto"
-      # RBAC: this dev profile serves under steward (frictionless single-user);
-      # production profiles set guest (UPL-002 sub-decision).
-      EDO_ROLE: "steward"
+      # RBAC: this dev profile serves under admin (full bus diagnostics +
+      # publish); production profiles set guest (UPL-002 sub-decision).
+      EDO_ROLE: "admin"
 
   # novacrate — self-hosted NovaCrate editor for iframe embedding (CF3).
   # Iframe mode is disabled on the official instance, so we build from source
