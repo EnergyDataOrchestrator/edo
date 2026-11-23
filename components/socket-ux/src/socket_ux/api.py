@@ -144,6 +144,62 @@ def _client(settings) -> "httpx.Client":  # noqa: F821 — typing kept lean
     return httpx.Client(base_url=settings.fuseki_url)
 
 
+@app.get("/api/v1/ontology/terms")
+def ontology_terms(q: str, limit: int = 20) -> dict[str, Any]:
+    """Ranked ontology-term candidates for a free-text query (UPL-004 Stage 3).
+
+    The search runs over the labels the internal graph actually carries
+    (rdfs:label, skos:prefLabel/altLabel, dcterms:title) — an empty match is
+    returned honestly as an empty list, never as invented terms. Read-only,
+    available to every role like ``/api/v1/projects``.
+    """
+    import httpx
+
+    from . import ontology
+
+    settings = get_settings()
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            terms = ontology.search_terms(settings, client, q, limit)
+    except ontology.OntologyError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"query": q, "terms": terms}
+
+
+@app.post("/api/v1/cca/recommendations")
+def cca_recommendations(body: dict[str, Any]) -> dict[str, Any]:
+    """Term candidates per CSV column — the CCA recommendation batch endpoint.
+
+    Body: ``{"columns": [{"name": str, "sample_values": [str, …]}, …],
+    "limit": int}``. The response carries per column the ranked candidates
+    from the graph-backed search (strategies: full name, name tokens, first
+    sample value); candidates may legitimately be empty.
+    """
+    import httpx
+
+    from . import ontology
+
+    columns = body.get("columns") if isinstance(body, dict) else None
+    if not isinstance(columns, list) or not all(isinstance(c, dict) for c in columns):
+        raise HTTPException(status_code=400, detail={
+            "code": "invalid_body",
+            "message": 'expected {"columns": [{"name": …, "sample_values": […]}, …]}',
+        })
+    limit = body.get("limit", 5) if isinstance(body, dict) else 5
+    if not isinstance(limit, int) or isinstance(limit, bool) or not (1 <= limit <= 50):
+        raise HTTPException(status_code=400, detail={
+            "code": "invalid_body", "message": "limit must be an integer in [1, 50]",
+        })
+
+    settings = get_settings()
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            recommendations = ontology.recommend_for_columns(settings, client, columns, limit)
+    except ontology.OntologyError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"recommendations": recommendations}
+
+
 @app.get("/api/v1/projects")
 def projects() -> dict[str, Any]:
     """Projects and their values from the internal database."""
