@@ -159,21 +159,30 @@ def test_put_forbidden_below_fellow(monkeypatch):
 
 
 class FakeFusekiClient:
-    """Minimal httpx.Client double: records crate writes, answers the SELECT."""
+    """Minimal httpx.Client double: records crate writes, answers the SELECT.
+
+    The write path distinguishes PUT (replace — one literal per graph) from
+    POST (add — appends) so the store cannot regress to POST semantics
+    without this suite failing.
+    """
 
     def __init__(self, settings):
         self.settings = settings
-        self.literals = {}
+        self.literals: dict[str, list[str]] = {}
 
     def post(self, url, data=None, params=None, content=None, auth=None, headers=None):
-        if url == self.settings.dataset_query_url:
-            match = re.search(r"GRAPH <([^>]+)>", (data or {}).get("query", ""))
-            literal = self.literals.get(match.group(1)) if match else None
-            bindings = [] if literal is None else [{"json": {"value": literal}}]
+        if data is not None and "query" in data:
+            match = re.search(r"GRAPH <([^>]+)>", data["query"])
+            literal = self.literals.get(match.group(1), []) if match else []
+            bindings = [{"json": {"value": value}} for value in literal]
             return _FakeResponse(200, {"results": {"bindings": bindings}})
+        raise AssertionError("crate writes must go through PUT (replace), not POST (add)")
+
+    def put(self, url, params=None, content=None, auth=None, headers=None):
         document = json.loads(content)
-        self.literals[params["graph"]] = document[crate_store.CRATE_JSON_PREDICATE]
-        return _FakeResponse(201, {})
+        # PUT replaces the graph: exactly one metadata literal afterwards.
+        self.literals[params["graph"]] = [document[crate_store.CRATE_JSON_PREDICATE]]
+        return _FakeResponse(200, {})
 
 
 class _FakeResponse:
@@ -206,3 +215,22 @@ def test_crate_store_verbatim_roundtrip():
     assert crate_store.load_committed(settings, PROJECT_IRI, client) is None
     crate_store.save_committed(settings, PROJECT_IRI, metadata, client)
     assert crate_store.load_committed(settings, PROJECT_IRI, client) == metadata
+
+
+def test_crate_store_repeated_commits_replace(monkeypatch):
+    """A second commit replaces the stored metadata — no stale literals.
+
+    Fuseki ``POST /data?graph=`` *adds* triples: repeated commits accumulated
+    stale crateJson literals and ``load_committed`` served an arbitrary (old)
+    one while the OCC token advanced. The store must use PUT (replace).
+    """
+    settings = FakeAdminSettings()
+    client = FakeFusekiClient(settings)
+    first = {"@graph": [{"@id": "./", "name": "first"}]}
+    second = {"@graph": [{"@id": "./", "name": "second"}]}
+
+    crate_store.save_committed(settings, PROJECT_IRI, first, client)
+    crate_store.save_committed(settings, PROJECT_IRI, second, client)
+    assert crate_store.load_committed(settings, PROJECT_IRI, client) == second
+    graph = crate_store.crate_graph_uri(PROJECT_IRI)
+    assert len(client.literals[graph]) == 1

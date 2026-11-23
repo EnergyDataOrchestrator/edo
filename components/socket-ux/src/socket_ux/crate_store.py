@@ -74,15 +74,17 @@ def save_committed(
     """Persist crate metadata as the project's committed crate (named graph).
 
     The compact JSON-LD document is stored verbatim as one literal triple;
-    POST ``/{dataset}/data?graph=<uri>`` replaces the named graph's content,
-    so repeated commits are idempotent writes.
+    HTTP ``PUT /{dataset}/data?graph=<uri>`` *replaces* the named graph's
+    content, so repeated commits are idempotent writes. (POST would *add* —
+    Jena keeps the old triples, the graph accumulates stale literals and
+    ``load_committed`` reads an arbitrary one — regression-tested.)
     """
     document = {
         "@id": f"{crate_graph_uri(project_iri)}#metadata",
         "@type": CRATE_METADATA_TYPE,
         CRATE_JSON_PREDICATE: json.dumps(metadata, ensure_ascii=False),
     }
-    response = client.post(
+    response = client.put(
         f"{settings.fuseki_url.rstrip('/')}/{settings.fuseki_dataset}/data",
         params={"graph": crate_graph_uri(project_iri)},
         content=json.dumps(document, ensure_ascii=False),
