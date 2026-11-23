@@ -20,6 +20,9 @@ class Settings:
     ``FUSEKI_PASSWORD`` — basic-auth password
     ``KAFKA_BOOTSTRAP_SERVERS`` — databus for ontology-aware events (optional;
                           when unset, events are skipped and only logged)
+    ``KAFKA_TOPIC_PATTERN`` — subscription regex of the bridge consumer
+                          (default: every ``edo.*`` topic; CF1-012)
+    ``BUS_BUFFER_SIZE``   — per-topic ring-buffer capacity of the REST bridge
     ``ONTOLOGY_PATH``   — path to the ontology (regimo.ttl); used for the
                           ``ontology_uri`` message header
     """
@@ -29,6 +32,8 @@ class Settings:
     fuseki_user: str = field(default_factory=lambda: _env("FUSEKI_USER", "admin"))
     fuseki_password: str = field(default_factory=lambda: _env("FUSEKI_PASSWORD", "edo-proto"))
     kafka_bootstrap_servers: str = field(default_factory=lambda: _env("KAFKA_BOOTSTRAP_SERVERS"))
+    kafka_topic_pattern: str = field(default_factory=lambda: _env("KAFKA_TOPIC_PATTERN", "^edo\\."))
+    bus_buffer_size: int = field(default_factory=lambda: int(_env("BUS_BUFFER_SIZE", "100") or 100))
     ontology_path: str = field(default_factory=lambda: _env("ONTOLOGY_PATH"))
 
     @property

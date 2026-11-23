@@ -22,11 +22,13 @@ from typing import Any, Annotated
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel
 
 from . import crate as crate_mod
 from . import fuseki
-from .bus import CRATE_TOPIC, SOCKET_ID, BusPublisher, MessageHeader, ontology_uri_from_path
+from .bus import CRATE_TOPIC, SOCKET_ID, BusPublisher, MessageHeader, ORDERED_HEADER_KEYS, ontology_uri_from_path
 from .config import get_settings
+from .databus import DatabusStore, broker_online, list_topics
 from .events import BusEvent, EventBus, subscriber_from_settings
 from .internal_format import project_doc
 
@@ -39,6 +41,7 @@ app = FastAPI(title="socket-ux", version="0.1.0", description=(
 _publisher: BusPublisher | None = None
 _broker = EventBus()
 _subscriber = None  # BusSubscriber | None, started in the lifespan below
+_databus = DatabusStore()  # per-topic ring buffers behind the /bus bridge
 
 
 def broker() -> EventBus:
@@ -51,7 +54,9 @@ async def _lifespan(_: FastAPI):
     global _subscriber
     settings = get_settings()
     _broker.attach_loop(asyncio.get_running_loop())
-    _subscriber = subscriber_from_settings(_broker, settings.kafka_bootstrap_servers)
+    _subscriber = subscriber_from_settings(
+        _broker, settings.kafka_bootstrap_servers,
+        store=_databus, pattern=settings.kafka_topic_pattern)
     if _subscriber is not None:
         _subscriber.start()
     try:
@@ -180,6 +185,25 @@ def format_sse(event: BusEvent) -> str:
     return f"event: {name}\ndata: {data}\n\n"
 
 
+def format_bus_sse(event: BusEvent) -> str:
+    """One bus message in full as an SSE message for the live tracker.
+
+    Unlike :func:`format_sse` (which carries only the payload), this ships the
+    complete bridge message shape — topic, payload, header, partition, offset,
+    broker timestamp — so the Databus view can insert it into the right topic
+    view without a round trip.
+    """
+    data = json.dumps({
+        "topic": event.topic,
+        "payload": event.payload,
+        "header": event.headers,
+        "partition": event.partition,
+        "offset": event.offset,
+        "timestamp": event.timestamp,
+    }, ensure_ascii=False)
+    return f"event: bus.message\ndata: {data}\n\n"
+
+
 @app.get("/api/v1/events")
 async def events(request: Request) -> StreamingResponse:
     """SSE stream of databus events (``edo.projects.v1`` via regimo-core).
@@ -211,3 +235,124 @@ async def events(request: Request) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# -- live tracker feed (CF1-012): every bus message, in full, as SSE ---------
+
+
+@app.get("/api/v1/bus/events")
+async def bus_events(request: Request) -> StreamingResponse:
+    """SSE stream of *every* bus message — the Databus view's live tracker.
+
+    Each message is emitted as ``event: bus.message`` with the complete bridge
+    shape (topic, payload, header, partition, offset, broker timestamp), so
+    the front end can append it live to the selected topic's view. The same
+    keep-alive/retry conventions as ``/api/v1/events`` apply.
+    """
+
+    async def stream():
+        queue = _broker.subscribe()
+        try:
+            yield "retry: 3000\n\n"
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(
+                        queue.get(), timeout=SSE_KEEPALIVE_S)
+                except asyncio.TimeoutError:
+                    yield ": keep-alive\n\n"
+                    continue
+                yield format_bus_sse(event)
+        finally:
+            _broker.unsubscribe(queue)
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# -- databus REST bridge (CF1-012): the bus, as plain REST -------------------
+#
+# The contract of ``frontend/vue-frontend/src/lib/databus.ts``: topics,
+# per-topic recent messages (bare JSON array), publishing with the 6-header
+# contract, and a status probe for the "bridge online" chip. Without a
+# configured/reachable broker the listing endpoints answer 503 so the
+# frontend's ``bridgeAvailable()`` falls back to demo mode.
+
+
+def _broker_servers() -> str:
+    return get_settings().kafka_bootstrap_servers
+
+
+@app.get("/api/v1/bus/topics")
+def bus_topics() -> dict[str, Any]:
+    """Topics of the broker as ``{"topics": [{name, partitions}]}``."""
+    servers = _broker_servers()
+    if not servers:
+        raise HTTPException(status_code=503, detail="no databus configured (KAFKA_BOOTSTRAP_SERVERS unset)")
+    try:
+        topics = list_topics(servers)
+    except Exception as exc:  # noqa: BLE001 — offline must answer 503, not 500
+        raise HTTPException(status_code=503, detail=f"broker unreachable: {exc}") from exc
+    return {"topics": topics}
+
+
+@app.get("/api/v1/bus/topics/{topic}/messages")
+def bus_messages(topic: str, limit: int = Query(default=20, ge=1, le=100)) -> list[dict[str, Any]]:
+    """The last ``limit`` messages of one topic from the ring buffer.
+
+    Bare JSON array — that is what ``recentMessages()`` in ``databus.ts``
+    expects. Headers are shown verbatim per the 6-header contract.
+    """
+    return [m.as_api() for m in _databus.recent(topic, limit)]
+
+
+class BusPublishBody(BaseModel):
+    """POST body of the publish endpoint: ``{payload, header}``."""
+
+    payload: dict[str, Any]
+    header: dict[str, str]
+
+
+@app.post("/api/v1/bus/topics/{topic}/messages")
+def bus_publish(topic: str, body: BusPublishBody) -> dict[str, Any]:
+    """Publish a payload with the 6-header contract to one topic.
+
+    Makes the frontend's ``publishMaDmp()`` real. The message is also
+    recorded in the ring buffer right away so it shows up in the topic's
+    recent messages without waiting for the consumer round trip (the store
+    de-duplicates the consumer's own copy).
+    """
+    missing = [key for key in ORDERED_HEADER_KEYS if key not in body.header]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail="header violates the 6-header contract; missing: " + ", ".join(missing))
+    header = MessageHeader(
+        socket_id=body.header.get("socket_id", ""),
+        ontology_uri=body.header.get("ontology_uri", ""),
+        project_id=body.header.get("project_id", ""),
+        schema_id=body.header.get("schema_id", ""),
+        timestamp=body.header.get("timestamp", ""),
+        lineage=body.header.get("lineage", ""),
+    )
+    if not publisher().publish(topic, body.payload, header):
+        raise HTTPException(status_code=503, detail="bus publishing unavailable (no producer/broker)")
+    # No local record here: the bridge consumer picks the produced message up
+    # within ~1 s and records it once (with partition/offset) — recording it
+    # locally too would show it twice.
+    return {"published": True, "topic": topic}
+
+
+@app.get("/api/v1/bus/status")
+def bus_status() -> dict[str, Any]:
+    """Bridge status: broker reachability, subscriber, per-topic buffer fill."""
+    servers = _broker_servers()
+    return {
+        "online": broker_online(servers),
+        "subscriber": _subscriber is not None,
+        "buffered": _databus.counts(),
+    }

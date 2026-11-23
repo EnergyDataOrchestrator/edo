@@ -1,4 +1,4 @@
-"""Databus events for socket-ux (CF1): consume ``edo.projects.v1``.
+"""Databus events for socket-ux (CF1): consume the ``edo.*`` topics.
 
 ``regimo-core`` publishes one semantic event per project change on the
 ``edo.projects.v1`` topic (6-header contract, see
@@ -18,13 +18,21 @@ import asyncio
 import json
 import logging
 import threading
+import datetime as _dt
 from dataclasses import dataclass, field
 from typing import Any, Callable
+
+from .databus import DatabusStore, StoredMessage
 
 logger = logging.getLogger(__name__)
 
 #: topic on which regimo-core announces project created/updated/removed
 PROJECTS_TOPIC = "edo.projects.v1"
+
+#: subscription pattern of the bridge consumer (CF1-012): everything the
+#: sockets publish lives under the ``edo.`` prefix; Kafka-internal topics
+#: (``__consumer_offsets``, ``_schemas``, …) never match it.
+TOPIC_PATTERN = "^edo\\."
 
 
 @dataclass
@@ -34,6 +42,11 @@ class BusEvent:
     topic: str
     payload: dict[str, Any] = field(default_factory=dict)
     headers: dict[str, str] = field(default_factory=dict)
+    # Kafka bookkeeping for the REST bridge's ring buffer (CF1-012); ``None``
+    # when the carrier is not a real Kafka message (tests, local events).
+    partition: int | None = None
+    offset: int | None = None
+    timestamp: str | None = None
 
     @property
     def action(self) -> str:
@@ -60,7 +73,27 @@ def parse_kafka_message(msg: Any) -> BusEvent:
             payload = decoded
     except Exception as exc:  # keep the stream alive on malformed messages
         logger.warning("undecodable bus message on %s: %s", msg.topic(), exc)
-    return BusEvent(topic=msg.topic(), payload=payload, headers=headers)
+    return BusEvent(
+        topic=msg.topic(), payload=payload, headers=headers, **message_meta(msg))
+
+
+def message_meta(msg: Any) -> dict[str, Any]:
+    """Partition/offset/broker-timestamp of a Kafka message, defensively.
+
+    Fake carriers (tests, locally built events) may lack those attributes;
+    they then simply stay ``None``.
+    """
+    meta: dict[str, Any] = {"partition": None, "offset": None, "timestamp": None}
+    try:
+        meta["partition"] = int(msg.partition())
+        meta["offset"] = int(msg.offset())
+        ts_type, ts_ms = msg.timestamp()
+        if ts_ms and ts_ms > 0:
+            meta["timestamp"] = _dt.datetime.fromtimestamp(
+                ts_ms / 1000, tz=_dt.timezone.utc).isoformat()
+    except Exception:  # not a real Kafka message — keep the Nones
+        pass
+    return meta
 
 
 class EventBus:
@@ -107,11 +140,15 @@ class BusSubscriber:
     """Background Kafka consumer thread feeding an :class:`EventBus`."""
 
     def __init__(self, bootstrap_servers: str, topic: str, broker: EventBus,
-                 group_id: str = "socket-ux-events") -> None:
+                 group_id: str = "socket-ux-events",
+                 store: DatabusStore | None = None,
+                 pattern: str = "") -> None:
         self.bootstrap_servers = bootstrap_servers
         self.topic = topic
         self.broker = broker
         self.group_id = group_id
+        self.store = store
+        self.pattern = pattern
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._consumer: Any = None
@@ -144,12 +181,19 @@ class BusSubscriber:
         self._consumer = Consumer({
             "bootstrap.servers": self.bootstrap_servers,
             "group.id": self.group_id,
-            "auto.offset.reset": "latest",
+            # "earliest" so the bridge's ring buffer is filled with a topic's
+            # recent history on first assignment (no committed offset yet);
+            # with committed offsets the consumer resumes where it left off.
+            "auto.offset.reset": "earliest",
             "enable.auto.commit": True,
         })
-        self._consumer.subscribe([self.topic])
+        # With a pattern the consumer follows every matching topic (the
+        # bridge must also see e.g. ``edo.dmp.v1``); without one the classic
+        # single-topic subscription is kept.
+        subscription = [self.pattern] if self.pattern else [self.topic]
+        self._consumer.subscribe(subscription)
         logger.info("bus subscriber listening on %s (%s)",
-                    self.topic, self.bootstrap_servers)
+                    subscription, self.bootstrap_servers)
         while not self._stop.is_set():
             try:
                 msg = self._consumer.poll(0.5)
@@ -161,18 +205,31 @@ class BusSubscriber:
             if msg is None or msg.error():
                 continue
             event = parse_kafka_message(msg)
+            if self.store is not None:
+                self.store.record(StoredMessage(
+                    topic=event.topic, payload=event.payload,
+                    header=event.headers, partition=event.partition,
+                    offset=event.offset, timestamp=event.timestamp,
+                ))
             self.broker.publish_threadsafe(event)
             logger.debug("bus event forwarded: %s %s", event.action, event.project)
 
 
 def subscriber_from_settings(broker: EventBus,
                              bootstrap_servers: str,
-                             attach_loop: bool = True) -> BusSubscriber | None:
-    """Build the subscriber when the databus is configured, else ``None``."""
+                             attach_loop: bool = True,
+                             store: DatabusStore | None = None,
+                             pattern: str = TOPIC_PATTERN) -> BusSubscriber | None:
+    """Build the subscriber when the databus is configured, else ``None``.
+
+    By default it subscribes to every ``edo.*`` topic and feeds both the SSE
+    fan-out and the REST bridge's ring buffer (``store``).
+    """
     if not bootstrap_servers:
         logger.info("no databus configured — SSE will only carry local events")
         return None
-    subscriber = BusSubscriber(bootstrap_servers, PROJECTS_TOPIC, broker)
+    subscriber = BusSubscriber(bootstrap_servers, PROJECTS_TOPIC, broker,
+                               store=store, pattern=pattern)
     if attach_loop:
         try:
             broker.attach_loop(asyncio.get_running_loop())

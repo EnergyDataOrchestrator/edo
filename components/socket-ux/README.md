@@ -20,6 +20,11 @@ vue-frontend ──HTTP──> socket-ux ──SPARQL──> Fuseki /projects (i
 | `GET /api/v1/projects/{pid}/values` | Full internal-format document (compact JSON-LD) of one project |
 | `GET /api/v1/projects/{pid}/crate` | RO-Crate metadata JSON for one project, ready for NovaCrate |
 | `GET /api/v1/events` | SSE stream of databus project events (live refresh of the drawer) |
+| `GET /api/v1/bus/topics` | Topics of the Kafka broker (REST bridge, CF1-012) |
+| `GET /api/v1/bus/topics/{topic}/messages?limit=N` | Last N messages of one topic (ring buffer, 6-header contract verbatim) |
+| `POST /api/v1/bus/topics/{topic}/messages` | Publish `{payload, header}` to a topic (6-header contract validated) |
+| `GET /api/v1/bus/status` | Broker reachability, subscriber state, per-topic buffer fill |
+| `GET /api/v1/bus/events` | SSE live feed of every bus message (full bridge shape) — the Databus view's live tracker |
 
 `{pid}` is the URL-encoded project IRI from the internal database, e.g.
 `urn%3Auuid%3Ad9e575a1-...`.
@@ -58,6 +63,22 @@ comment every 15 s keeps idle connections open. Without a configured broker
 the endpoint still works (it just never emits project events), keeping the
 socket usable before and without the databus.
 
+### Databus REST bridge (CF1-012)
+
+Browsers cannot speak the Kafka wire protocol, so the consumer thread
+(`events.py`) also fills per-topic **ring buffers** (`databus.py`, capacity
+`BUS_BUFFER_SIZE`, default 100) with every decoded message of every
+`edo.*` topic (`KAFKA_TOPIC_PATTERN`), and the API serves them as plain
+REST — exactly the contract `frontend/vue-frontend/src/lib/databus.ts`
+expects. The dev server proxies `/bus` → `http://localhost:8090/api/v1/bus`.
+
+Without a configured/reachable broker the listing endpoints answer `503`, so
+the frontend shows its offline state instead of data — no demo fallback
+(no-demo-data policy, see [[CF1-013]]); `status` always answers `200`.
+Kafka-internal topics (`__consumer_offsets`, `_schemas`, …) are filtered from
+the topic list, and the 6-header contract is displayed verbatim — the bridge
+never transforms it.
+
 ### RO-Crate on demand
 
 `crate.py` mirrors the essential structure of
@@ -75,6 +96,8 @@ the packaged graph file remains in `fuseki-proto`.
 | `FUSEKI_DATASET` | `projects` | Dataset with the internal-format project graphs |
 | `FUSEKI_USER` / `FUSEKI_PASSWORD` | `admin` / `edo-proto` | Basic auth for the Fuseki data service |
 | `KAFKA_BOOTSTRAP_SERVERS` | *(unset)* | Databus for ontology-aware events (optional) |
+| `KAFKA_TOPIC_PATTERN` | `^edo\.` | Subscription regex of the bridge consumer (CF1-012) |
+| `BUS_BUFFER_SIZE` | `100` | Per-topic ring-buffer capacity of the REST bridge |
 | `ONTOLOGY_PATH` | *(unset)* | Path to `regimo.ttl`; source of the `ontology_uri` header |
 
 ## Run
