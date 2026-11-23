@@ -6,6 +6,7 @@ The API the vue-frontend talks to:
 * ``GET /api/v1/projects``             — projects and their key values (Fuseki)
 * ``GET /api/v1/projects/{pid}/values`` — full internal-format document
 * ``GET /api/v1/projects/{pid}/crate``  — RO-Crate metadata for NovaCrate
+  (both answer with an ``ETag``/``X-Revision-Token`` revision token, UPL-001)
 * ``GET /api/v1/events``               — SSE stream of databus project events
 * ``GET /api/v1/whoami``               — the RBAC role this instance serves under (EDO_ROLE)
 * ``GET /api/v1/bus/…``                — databus REST bridge / live tracker (steward+,
@@ -35,6 +36,7 @@ from .config import get_settings
 from .databus import DatabusStore, broker_online, list_topics
 from .events import BusEvent, EventBus, subscriber_from_settings
 from .internal_format import project_doc
+from .occ import TokenStore, canonical_digest
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,15 @@ _publisher: BusPublisher | None = None
 _broker = EventBus()
 _subscriber = None  # BusSubscriber | None, started in the lifespan below
 _databus = DatabusStore()  # per-topic ring buffers behind the /bus bridge
+_token_store: TokenStore | None = None  # OCC revision tokens (UPL-001)
+
+
+def token_store() -> TokenStore:
+    """The OCC token store (file-backed when SOCKET_UX_OCC_STATE_FILE is set)."""
+    global _token_store
+    if _token_store is None:
+        _token_store = TokenStore(get_settings().occ_state_file)
+    return _token_store
 
 
 def broker() -> EventBus:
@@ -140,8 +151,22 @@ def projects() -> dict[str, Any]:
     return {"projects": found}
 
 
+def _etag_response(content: Any, token: str) -> JSONResponse:
+    """JSON response carrying the slice's revision token (UPL-001).
+
+    The token travels as ``ETag`` (strong validator, quoted per RFC 7232) and
+    as ``X-Revision-Token`` (unquoted, trivial to read in the browser). The
+    served bodies stay untouched — NovaCrate and the JSON tree must not see
+    transport metadata.
+    """
+    return JSONResponse(content=content, headers={
+        "ETag": f'"{token}"',
+        "X-Revision-Token": token,
+    })
+
+
 @app.get("/api/v1/projects/{pid:path}/values")
-def project_values(pid: str) -> dict[str, Any]:
+def project_values(pid: str) -> JSONResponse:
     """Full internal-format document (compact JSON-LD) of one project."""
     import httpx
 
@@ -154,7 +179,8 @@ def project_values(pid: str) -> dict[str, Any]:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return doc
+    token = token_store().observe(f"adp:values:{pid}", doc)
+    return _etag_response(doc, str(token))
 
 
 @app.get("/api/v1/projects/{pid:path}/crate")
@@ -191,7 +217,8 @@ def project_crate(pid: str) -> JSONResponse:
             lineage=f"fuseki/{settings.fuseki_dataset} -> socket-ux -> nova-crate",
         ),
     )
-    return JSONResponse(content=metadata)
+    token = token_store().observe(f"fep:crate:{pid}", metadata)
+    return _etag_response(metadata, str(token))
 
 
 # -- server-sent events (CF1): project changes reach the front end live ------

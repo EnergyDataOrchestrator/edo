@@ -41,6 +41,9 @@ class Settings:
     # Safe default; the dev compose sets EDO_ROLE=steward (UPL-002 sub-decision:
     # steward for local/dev profiles, guest for production).
     role: str = field(default_factory=lambda: _env("EDO_ROLE", "guest"))
+    # OCC revision-token state (UPL-001). When set, tokens survive restarts by
+    # persisting to this file; unset → in-memory only.
+    occ_state_file: str = field(default_factory=lambda: _env("SOCKET_UX_OCC_STATE_FILE"))
 
     @property
     def dataset_query_url(self) -> str:
