@@ -69,6 +69,9 @@ services:
     volumes:
       # Mount the ontology so the socket is 'ontology-aware' at runtime
       - ./schema/ontology:/app/ontology:ro
+      # OCC revision-token state (UPL-001): survives container restarts so
+      # pre-restart If-Match tokens keep resolving (restart-safety AC).
+      - socket-ux-occ:/app/occ-state
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
@@ -81,6 +84,7 @@ services:
       # RBAC: this dev profile serves under admin (full bus diagnostics +
       # publish); production profiles set guest (UPL-002 sub-decision).
       EDO_ROLE: "admin"
+      SOCKET_UX_OCC_STATE_FILE: "/app/occ-state/revision-tokens.json"
 
   # novacrate — self-hosted NovaCrate editor for iframe embedding (CF3).
   # Iframe mode is disabled on the official instance, so we build from source
@@ -126,3 +130,6 @@ services:
 networks:
   default:
     name: regimo-network
+
+volumes:
+  socket-ux-occ:
